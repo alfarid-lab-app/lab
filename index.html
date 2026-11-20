@@ -102,7 +102,7 @@ function nk(n){return String(n).toLowerCase().replace(/[^a-z0-9]/g,'')}
 function mergeCat(force){if(S.catv&&!force)return;const have=new Set(S.tests.map(t=>nk(t.name)));let i=0;HB.R.forEach(r=>{i++;const k=nk(r[1]);if(have.has(k))return;have.add(k);S.tests.push({id:'h'+i,cat:r[0],name:r[1],type:r[2]?'num':'txt',unit:r[2],low:'',high:'',lowF:'',highF:'',normal:'',price:0,spec:HB.S[r[3]],tat:HB.T[r[4]]})});S.catv=1;save()}
 
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.patients)return s}catch(e){}
- return {patients:[],visits:[],tests:seed(),settings:{name:'المعمل الفريد للتحاليل الطبية الكيميائية',phone:'01224054573',hours:'مواعيد العمل: يوميًا من 8 ص إلى 9 م',owner:'د. عاطف عبيد حليم',footer:'النتائج تُفسَّر بواسطة الطبيب المعالج مع الحالة الإكلينيكية.'},seq:1000}}
+ return {patients:[],visits:[],tests:seed(),settings:{name:'المعمل الفريد للتحاليل الطبية الكيميائية',phone:'01224054573',hours:'مواعيد العمل: يوميًا من ٨ صباحًا حتى ١٠ مساءً',owner:'د. عاطف عبيد حليم',footer:'النتائج تُفسَّر بواسطة الطبيب المعالج مع الحالة الإكلينيكية.'},seq:1000}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert('المساحة ممتلئة. اعمل نسخة احتياطية الأول.')}}
 const uid=p=>p+(++S.seq).toString(36)+Math.random().toString(36).slice(2,5);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -343,7 +343,7 @@ function drawReport(v,p,lh){const pages=[];let cv,c,y,pg=0;const s=S.settings;co
   c.fillStyle='#fff';c.fillRect(0,0,W,H);
   if(!lh){
   if(LOGO.complete&&LOGO.naturalWidth){const lg=150,lw=lg*LOGO.naturalWidth/LOGO.naturalHeight;c.drawImage(LOGO,(W-lw)/2,22,lw,lg)}
-  txt('Medical Chemical Laboratory',W/2,212,{a:'center',b:1,s:30,col:TEAL,d:'ltr'});txt('Open daily 8 AM - 9 PM   |   Tel: '+s.phone,W/2,246,{a:'center',s:21,col:'#7a7a7a',d:'ltr'});
+  txt('Medical Chemical Laboratory',W/2,212,{a:'center',b:1,s:30,col:TEAL,d:'ltr'});txt('يوميًا من ٨ صباحًا حتى ١٠ مساءً   |   تليفون: '+s.phone,W/2,246,{a:'center',s:23,col:'#7a7a7a',d:'rtl'});
   c.fillStyle=GRN;c.fillRect(60,266,(W-120)/2,6);c.fillStyle=TEAL;c.fillRect(W/2,266,(W-120)/2,6);
   }
   y=lh?LT:300;
@@ -386,7 +386,7 @@ function drawReport(v,p,lh){const pages=[];let cv,c,y,pg=0;const s=S.settings;co
  const now=new Date(),tm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  pages.forEach((cv,i)=>{c=cv.getContext('2d');if(lh){L('Page '+(i+1)+' of '+pages.length,60,H-LB-12,{s:18,col:'#777'});txt('Printed on '+tm+'  '+fd(today()),W-60,H-LB-12,{s:18,col:'#777',a:'right',d:'ltr'});return}c.fillStyle='#d9d9d9';c.fillRect(60,H-105,W-120,2);
   L('Page '+(i+1)+' of '+pages.length,60,H-78,{s:21,col:'#555'});L('Printed by: System',W/2-90,H-78,{s:21,col:'#555'});txt('Printed on '+tm+'  '+fd(today()),W-60,H-78,{s:21,col:'#555',a:'right',d:'ltr'});
-  txt(s.addr||'عبد القادر بحري شارع جامع السلام فوق قهوة الفاروق',W/2,H-50,{s:23,col:'#333',b:1,a:'center',d:'rtl'});txt('Tel: '+s.phone+'   |   Open daily 8 AM - 9 PM',W/2,H-22,{s:19,col:GRND,b:1,a:'center',d:'ltr'});
+  txt(s.addr||'عبد القادر بحري شارع جامع السلام فوق قهوة الفاروق',W/2,H-50,{s:23,col:'#333',b:1,a:'center',d:'rtl'});txt('يوميًا من ٨ صباحًا حتى ١٠ مساءً   |   تليفون: '+s.phone,W/2,H-22,{s:22,col:GRND,b:1,a:'center',d:'rtl'});
   if(LOGO.complete&&LOGO.naturalWidth){const lh=46,lw=lh*LOGO.naturalWidth/LOGO.naturalHeight;c.drawImage(LOGO,W-60-lw,H-52-0,0,0)}});
  return pages}
 /* PDF بسيط: كل صفحة صورة JPEG */
@@ -431,4 +431,4 @@ render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
 </body>
- </html>
+  </html>
