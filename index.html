@@ -37,6 +37,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:7px 6px;border-bottom:1px solid var(--b);text-align:right}
 th{background:var(--tl);color:var(--td)}
 td.l,th.l{direction:ltr;text-align:left}
+table.ltr{direction:ltr}table.ltr td,table.ltr th{overflow-wrap:break-word;padding:7px 5px}table.ltr th,table.ltr td{text-align:left}
 .fab{position:fixed;bottom:16px;left:16px;z-index:6;border-radius:30px;padding:14px 20px;box-shadow:0 3px 10px #0004}
 .modal{position:fixed;inset:0;background:#0007;z-index:20;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:12px}
 .modal>div{background:#fff;border-radius:14px;padding:14px;width:100%;max-width:560px;margin:auto}
@@ -198,7 +199,7 @@ function vView(){const v=S.visits.find(x=>x.id===V.id);if(!v)return go('patients
  const cats=Object.keys(CATS).filter(c=>v.items.some(i=>(i.cat||'oth')===c));const s=sum(v.items),n=s-(+v.disc||0);
  $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${p.age?p.age+' سنة - ':''}${gl(p.gender)} - ${fd(v.date)}</span>
  <div class="row" style="margin-top:10px"><button class="btn w" onclick="report('${v.id}')">📄 تقرير PDF / واتساب</button><button class="btn s sm" onclick="go('edit',{id:'${v.id}',pid:'${p.id}'})">تعديل النتائج</button><button class="btn s sm" onclick="go('patient',{id:'${p.id}'})">ملف المريض</button><button class="btn d sm" onclick="vDel('${v.id}')">حذف</button></div></div>
- <div class="card"><table><tr><th class="l">Test</th><th class="l">Result</th><th class="l">Unit</th><th class="l">Reference</th></tr>
+ <div class="card" style="overflow-x:auto;direction:ltr"><table class="ltr"><tr><th class="l">Test</th><th class="l">Result</th><th class="l">Unit</th><th class="l">Reference</th></tr>
  ${cats.map(c=>`<tr><td colspan="4" style="background:#f4f7f7;font-weight:bold;color:var(--td)">${CATS[c]}</td></tr>`+v.items.filter(i=>(i.cat||'oth')===c).map(i=>{const f=flag(i,p.gender);return `<tr><td class="l">${esc(i.name)}</td><td class="l ${f?'hi':''}">${esc(i.value)||'-'} ${f==='H'?'▲':f==='L'?'▼':f?'●':''}</td><td class="l">${esc(i.unit)}</td><td class="l">${esc(refText(i,p.gender))}</td></tr>`}).join('')).join('')}</table></div>
  ${v.notes?`<div class="card"><b>ملاحظات:</b> ${esc(v.notes)}</div>`:''}${s?`<div class="card muted">الإجمالي ${s} - الخصم ${+v.disc||0} = <b>${n} ج</b> | المدفوع ${+v.paid||0} | المتبقي ${n-(+v.paid||0)}</div>`:''}`}
 function vDel(id){if(!confirm('تحذف الزيارة دي؟'))return;const v=S.visits.find(x=>x.id===id);S.visits=S.visits.filter(x=>x.id!==id);save();go('patient',{id:v.pid})}
@@ -266,17 +267,17 @@ function drawReport(v,p){const pages=[];let cv,c,y,pg=0;const s=S.settings;
    y+=150}
   headRow()}
  function headRow(){c.fillStyle=TEAL;c.fillRect(60,y,W-120,48);const f={s:23,b:1,col:'#fff',d:'ltr'};
-  txt('Test',W-80,y+33,{...f,a:'right'});txt('Result',W-560,y+33,{...f,a:'right'});txt('Unit',380+60,y+33,{...f,a:'right'});txt('Reference range',260,y+33,{...f,a:'right'});y+=48}
+  txt('Test',80,y+33,{...f,a:'left'});txt('Result',560,y+33,{...f,a:'left'});txt('Unit',790,y+33,{...f,a:'left'});txt('Reference range',960,y+33,{...f,a:'left'});y+=48}
  newPage();const limit=H-150;
  const cats=Object.keys(CATS).filter(k=>v.items.some(i=>(i.cat||'oth')===k));let alt=0;
  cats.forEach(k=>{if(y+44+50>limit){newPage()}
-  c.fillStyle='#d3ebe8';c.fillRect(60,y,W-120,40);txt(CATS[k],W-80,y+29,{b:1,s:24,col:'#0b5a54'});y+=40;
+  c.fillStyle='#d3ebe8';c.fillRect(60,y,W-120,40);txt(CATS[k],80,y+29,{b:1,s:24,col:'#0b5a54',a:'left'});y+=40;
   v.items.filter(i=>(i.cat||'oth')===k).forEach(i=>{if(y+46>limit){newPage();}
    const f=flag(i,p.gender);if(alt++%2){c.fillStyle='#f6faf9';c.fillRect(60,y,W-120,46)}
-   txt(i.name,W-80,y+32,{s:23,d:'ltr',a:'right'});
+   txt(i.name,80,y+32,{s:23,d:'ltr',a:'left'});
    const val=(i.value||'-')+(f==='H'?'  ▲':f==='L'?'  ▼':f?'  ●':'');
-   txt(val,W-560,y+32,{s:25,b:!!f,col:f?'#c62828':'#1b2b2a',d:'ltr',a:'right'});
-   txt(i.unit||'',440,y+32,{s:21,col:'#4a5f5d',d:'ltr',a:'right'});txt(refText(i,p.gender),320,y+32,{s:21,col:'#4a5f5d',d:'ltr',a:'right'});
+   txt(val,560,y+32,{s:25,b:!!f,col:f?'#c62828':'#1b2b2a',d:'ltr',a:'left'});
+   txt(i.unit||'',790,y+32,{s:21,col:'#4a5f5d',d:'ltr',a:'left'});txt(refText(i,p.gender),960,y+32,{s:21,col:'#4a5f5d',d:'ltr',a:'left'});
    c.strokeStyle='#e3ecea';c.lineWidth=1;c.beginPath();c.moveTo(60,y+46);c.lineTo(W-60,y+46);c.stroke();y+=46})});
  if(v.items.some(i=>flag(i,p.gender))){y+=14;txt('▲ مرتفع   ▼ منخفض   ● غير طبيعي',W-80,y+20,{s:20,col:'#c62828'});y+=34}
  if(v.notes){if(y+110>limit)newPage();y+=14;c.fillStyle='#fff8e1';c.fillRect(60,y,W-120,80);txt('ملاحظات: '+v.notes,W-80,y+48,{s:24})}
