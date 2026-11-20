@@ -174,12 +174,13 @@ function pDel(id){if(!confirm('تحذف المريض وكل نتايجه؟ مي�
 let D=null; // مسودة
 function vEdit(){
  if(!D||D.key!==(V.id||'n'+V.pid)){const v=V.id&&S.visits.find(x=>x.id===V.id);
-  D=v?{key:V.id,id:v.id,pid:v.pid,date:v.date,notes:v.notes||'',paid:v.paid||'',disc:v.disc||'',items:JSON.parse(JSON.stringify(v.items))}:{key:'n'+V.pid,pid:V.pid,date:today(),notes:'',paid:'',disc:'',items:[]}}
+  D=v?{key:V.id,id:v.id,pid:v.pid,date:v.date,notes:v.notes||'',cm:v.cm,paid:v.paid||'',disc:v.disc||'',items:JSON.parse(JSON.stringify(v.items))}:{key:'n'+V.pid,pid:V.pid,date:today(),notes:'',paid:'',disc:'',items:[]}}
  const p=S.patients.find(x=>x.id===D.pid);
  $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${p.age?p.age+' سنة - ':''}${gl(p.gender)}</span>
  <label>تاريخ الزيارة</label><input type="date" id="dd" value="${D.date}" onchange="D.date=this.value"></div>
  <h3>١) اختار التحاليل</h3><input id="tq" autocomplete="off" placeholder="اكتب اسم التحليل أو اختصاره (CBC, TSH, FBS ...)" oninput="sug()" onkeydown="if(event.key==='Enter'){event.preventDefault();sugGo()}"><div id="sg"></div><div class="muted" style="margin:8px 0 2px">أو اختار من القوائم:</div><div id="pk"></div>
  <h3>٢) النتائج</h3><div class="card" id="rs"></div>
+ <div class="card"><label>تعليقات إرشادية (تتولد تلقائيًا من التحاليل مع مراجع الإرشادات - راجعها وعدّلها)</label><textarea id="cm" rows="7" style="direction:ltr;text-align:left" oninput="D.cm=this.value">${esc(D.cm!==undefined?D.cm:autoCm(D.items))}</textarea><button class="btn s sm" onclick="D.cm=undefined;$('cm').value=autoCm(D.items)">↻ إعادة التوليد التلقائي</button></div>
  <div class="card"><label>ملاحظات تظهر في التقرير</label><textarea id="nt" rows="2" oninput="D.notes=this.value">${esc(D.notes)}</textarea>
  <div class="row"><div class="grow"><label>خصم (جنيه)</label><input type="number" inputmode="decimal" value="${esc(D.disc)}" oninput="D.disc=this.value;tot()"></div><div class="grow"><label>المدفوع (جنيه)</label><input type="number" inputmode="decimal" value="${esc(D.paid)}" oninput="D.paid=this.value;tot()"></div></div>
  <div id="tt" style="margin-top:8px;font-weight:bold"></div></div>
@@ -204,7 +205,7 @@ function rs(){const p=S.patients.find(x=>x.id===D.pid);
 function sum(it){return it.reduce((a,i)=>a+(+i.price||0),0)}
 function tot(){const s=sum(D.items),d=+D.disc||0,n=s-d,pd=+D.paid||0;if($('tt'))$('tt').textContent=s?`الإجمالي ${s} - الخصم ${d} = ${n} ج | المتبقي ${n-pd} ج`:''}
 function vSave(){if(!D.items.length){toast('اختار تحليل واحد على الأقل');return}
- const v={id:D.id||uid('v'),pid:D.pid,date:D.date||today(),notes:D.notes,paid:D.paid,disc:D.disc,items:D.items};
+ const v={id:D.id||uid('v'),pid:D.pid,date:D.date||today(),notes:D.notes,cm:D.cm,paid:D.paid,disc:D.disc,items:D.items};
  const i=S.visits.findIndex(x=>x.id===v.id);if(i>=0)S.visits[i]=v;else S.visits.push(v);save();D=null;go('view',{id:v.id})}
 
 /* ============ عرض زيارة ============ */
@@ -264,6 +265,19 @@ function rst(){if(!confirm('هترجع قائمة التحاليل للأصل و
 
 /* ============ التقرير: رسم على canvas ثم PDF ============ */
 /* ملاحظات تفسيرية آلية (للطبيب) */
+
+const CMLIB=[
+{t:'Lipid profile',re:/cholesterol|\bLDL|\bHDL|triglycer|lipid/i,x:"Interpret in the context of the patient's total cardiovascular risk. Per the 2019 ESC/EAS Guidelines for the management of dyslipidaemias, LDL-C goals are: <55 mg/dL (1.4 mmol/L) with at least a 50% reduction from baseline for very-high-risk patients; <70 mg/dL (1.8 mmol/L) for high risk; <100 mg/dL (2.6 mmol/L) for moderate risk; <116 mg/dL (3.0 mmol/L) for low risk. Non-HDL-C goals are <85, <100 and <130 mg/dL for very-high, high and moderate risk. Triglycerides below 150 mg/dL are desirable. A non-fasting sample is acceptable for risk assessment."},
+{t:'Glucose',re:/glucose|\bFBS\b|\bRBS\b|blood sugar|OGTT|postprandial/i,x:"Per the ADA Standards of Care in Diabetes, diabetes is diagnosed by fasting plasma glucose of 126 mg/dL (7.0 mmol/L) or higher, a 2-hour plasma glucose of 200 mg/dL (11.1 mmol/L) or higher during a 75 g OGTT, or a random glucose of 200 mg/dL or higher with classic symptoms. Fasting glucose of 100-125 mg/dL indicates impaired fasting glucose (prediabetes). Without unequivocal hyperglycemia, the diagnosis should be confirmed with a repeat test. Fasting means no caloric intake for at least 8 hours."},
+{t:'HbA1c',re:/hba1c|glycated|glycosylated|\bA1c\b/i,x:"Per the ADA Standards of Care in Diabetes, HbA1c of 6.5% (48 mmol/mol) or higher is consistent with diabetes, and 5.7-6.4% (39-47 mmol/mol) with prediabetes, to be confirmed by repeat testing when there are no clear symptoms. A common treatment goal for many non-pregnant adults with diabetes is below 7.0% (53 mmol/mol), individualized for each patient. HbA1c may be unreliable in anemia, hemoglobin variants, or after recent transfusion."},
+{t:'Liver function',re:/\bALT\b|\bAST\b|SGPT|SGOT|\bALP\b|alkaline phosph|\bGGT\b|bilirubin/i,x:"Evaluate per the ACG Clinical Guideline on the Evaluation of Abnormal Liver Chemistries (2017). Classify the pattern as hepatocellular (ALT/AST predominant), cholestatic (ALP predominant) or mixed. Mild elevations (below 5 times the upper limit of normal) are common and are often related to fatty liver disease, medications or alcohol. An AST:ALT ratio above 2 may suggest alcohol-related liver disease. Persistent abnormalities call for repeat testing and clinical assessment."},
+{t:'Kidney function',re:/creatinine|\burea\b|\bBUN\b|eGFR/i,x:"Per the KDIGO 2012 CKD guideline, chronic kidney disease is defined by eGFR below 60 mL/min/1.73 m2 and/or markers of kidney damage persisting for more than 3 months. GFR categories: G1 90 or above, G2 60-89, G3a 45-59, G3b 30-44, G4 15-29, G5 below 15. Serum creatinine depends on muscle mass, diet and hydration, so eGFR should be used and an abnormal result confirmed by repeat testing. Albuminuria (urine albumin/creatinine ratio) should be assessed to stage risk."},
+{t:'Thyroid function',re:/\bTSH\b|\bT3\b|\bT4\b|\bFT3\b|\bFT4\b|thyroxine|free T/i,x:"TSH is the most sensitive screening test and should be read together with free T4 (and free T3 when needed). A raised TSH with low free T4 indicates overt primary hypothyroidism; a raised TSH with normal free T4 is subclinical hypothyroidism, usually confirmed by repeating the tests after 2-3 months (ATA/AACE guidelines for hypothyroidism, 2012). A suppressed TSH with raised free T4/T3 indicates hyperthyroidism (ATA guidelines for hyperthyroidism, 2016). Reference intervals vary with the assay and in pregnancy."},
+{t:'Complete blood count',re:/hemoglobin|\bHb\b|\bHGB\b|\bRBC|\bWBC|platelet|\bPLT\b|\bMCV\b|hematocrit|\bHCT\b/i,x:"Anemia is defined by the WHO as hemoglobin below 13.0 g/dL in men, below 12.0 g/dL in non-pregnant women and below 11.0 g/dL in pregnant women (WHO, 2011). Classify by MCV: low MCV (microcytic) suggests iron deficiency or thalassemia trait; normal MCV suggests chronic disease, blood loss or hemolysis; high MCV (macrocytic) suggests vitamin B12 or folate deficiency, liver disease, hypothyroidism or drugs. Platelets below 150 x10^9/L or abnormal white cell counts should be correlated clinically, with a blood film review where indicated."},
+{t:'Iron status',re:/ferritin|\biron\b|\bTIBC\b/i,x:"Per the WHO 2020 guideline on ferritin concentrations, a ferritin below 15 ug/L in adults indicates depleted iron stores; in the presence of infection or inflammation the threshold is below 70 ug/L, since ferritin is an acute-phase reactant. Interpret together with hemoglobin, MCV and transferrin saturation."},
+{t:'Vitamin D',re:/vitamin ?D|25.?OH/i,x:"Per the Endocrine Society clinical practice guideline (2011), vitamin D deficiency is a 25-OH vitamin D level below 20 ng/mL (50 nmol/L) and insufficiency is 21-29 ng/mL. Thresholds differ between societies, so interpret with the clinical context."}
+];
+function autoCm(items){const o=[];CMLIB.forEach(e=>{if((items||[]).some(i=>String(i.value||'').trim()&&e.re.test(i.name||'')))o.push(e.t+': '+e.x)});return o.join('\n\n')}
 function interpret(items,g){
  const F={},V={};items.forEach(i=>{const f=flag(i,g);if(f){F[i.name]=f;V[i.name]=i}});
  const dx=[],rec=[];const A=(a,b)=>{(a||[]).forEach(x=>dx.includes(x)||dx.push(x));(b||[]).forEach(x=>rec.includes(x)||rec.push(x))};
@@ -356,7 +370,9 @@ function drawReport(v,p){const pages=[];let cv,c,y,pg=0;const s=S.settings;const
    y+=50})});
  if(v.items.some(i=>flag(i,p.gender))){y+=10;L('\u25b2 High   \u25bc Low   \u25cf Abnormal',X1,y+20,{s:20,col:'#c62828'});y+=34}
  const wrap=(t,w,fs)=>{c.font=fs+'px '+SERIF;const ws=t.split(' ');let l='',o=[];ws.forEach(x=>{const n=l?l+' '+x:x;if(c.measureText(n).width>w&&l){o.push(l);l=x}else l=n});o.push(l);return o};
- if(v.notes){if(y+110>limit)newPage(true);y+=22;L('Comments :',X1,y+26,{b:1,s:26,col:'#000',f:SERIF});wrap(v.notes,W-360,25).forEach((l,k)=>{txt(l,230,y+26+k*32,{s:25,a:'left',d:/[\u0600-\u06ff]/.test(l)?'rtl':'ltr',col:'#000',f:SERIF})});y+=Math.max(1,wrap(v.notes,W-360,25).length)*32+20}
+ {const gc=v.cm!==undefined?v.cm:autoCm(v.items),para=[];if(v.notes)para.push(v.notes);String(gc||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>para.push(s));
+  if(para.length){if(y+110>limit)newPage(true);y+=22;L('Comments :',X1,y+26,{b:1,s:26,col:'#000',f:SERIF});y+=40;
+   para.forEach(t=>{wrap(t,W-2*X1,22).forEach(l=>{if(y+34>limit){newPage(true);y+=20}y+=30;txt(l,X1,y,{s:22,a:'left',d:/[\u0600-\u06ff]/.test(l)?'rtl':'ltr',col:'#000',f:SERIF})});y+=14});y+=10}}
  if(v.items.length){const R=interpret(v.items,p.gender);
   const sec=(title,arr,empty)=>{if(y+110>limit)newPage(true);y+=26;ul(title,X1,y+28,{b:1,s:28,col:'#000',f:SERIF});y+=46;
    if(!arr.length){y+=14;L(empty,X1,y+14,{s:23,col:'#000',f:SERIF});y+=26;return}
@@ -415,4 +431,4 @@ render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
 </body>
- </html>
+       </html>
