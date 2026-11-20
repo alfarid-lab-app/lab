@@ -304,10 +304,11 @@ async function report(id){const v=S.visits.find(x=>x.id===id),p=S.patients.find(
  <div class="row"><button class="btn w grow" onclick="waChat()">📲 فتح واتساب المريض</button></div>
  <div class="row" style="margin-top:8px"><button class="btn s grow" onclick="shareR()">مشاركة الملف (اختار المريض بنفسك)</button><button class="btn s" onclick="dl(RP.blob,RP.fname)">⬇ تنزيل PDF</button><button class="btn s" onclick="closeM()">إغلاق</button></div>
  <div class="muted" style="margin-top:8px">"فتح واتساب المريض": بينزل ملف PDF وبيفتح محادثة المريض برقمه المسجل على طول، وانت بس ترفق الملف (📎 مستند واختار الملف). لو مفيش رقم مسجل بيفتح قايمة المشاركة.</div></div></div>`}
+function greet(d){d=d||new Date();return d.getHours()<12?'صباح الخير':'مساء الخير'}
 function waChat(){const{blob,fname,p,v}=RP;const n=waNum(p.phone);if(n.length<11){toast('مفيش رقم تليفون مسجل للمريض');shareR();return}
- const msg='السلام عليكم '+p.name+'\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
+ const msg=greet()+' يا أفندم\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
  dl(blob,fname);window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');toast('الملف نزل. ارفقه في المحادثة 📎')}
-async function shareR(){const{blob,fname,p,v}=RP;const msg='السلام عليكم '+p.name+'\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
+async function shareR(){const{blob,fname,p,v}=RP;const msg=greet()+' يا أفندم\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
  const file=new File([blob],fname,{type:'application/pdf'});
  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:msg,title:fname});return}catch(e){if(e.name==='AbortError')return}}
  dl(blob,fname);const n=waNum(p.phone);setTimeout(()=>window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank'),600);
