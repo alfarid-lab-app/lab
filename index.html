@@ -385,8 +385,8 @@ function drawReport(v,p,lh){const pages=[];let cv,c,y,pg=0;const s=S.settings;co
   c.save();c.fillStyle='#d11a1a';c.textAlign='center';c.direction='ltr';c.font='italic bold 38px "Brush Script MT","Segoe Script","Lucida Handwriting",cursive';c.translate(cx,cy+112);c.rotate(-0.05);c.fillText('Dr. Atef Ebid',0,0);c.strokeStyle='#d11a1a';c.lineWidth=3;c.beginPath();c.moveTo(-100,12);c.quadraticCurveTo(0,3,105,13);c.stroke();c.restore()}
  const now=new Date(),tm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  pages.forEach((cv,i)=>{c=cv.getContext('2d');if(lh){L('Page '+(i+1)+' of '+pages.length,60,H-LB-12,{s:18,col:'#777'});txt('Printed on '+tm+'  '+fd(today()),W-60,H-LB-12,{s:18,col:'#777',a:'right',d:'ltr'});return}c.fillStyle='#d9d9d9';c.fillRect(60,H-105,W-120,2);
-  L('Page '+(i+1)+' of '+pages.length,60,H-68,{s:21,col:'#555'});L('Printed by: System',W/2-90,H-68,{s:21,col:'#555'});txt('Printed on '+tm+'  '+fd(today()),W-60,H-68,{s:21,col:'#555',a:'right',d:'ltr'});
-  txt('Tel: '+s.phone+'   |   Open daily 8 AM - 9 PM',W/2,H-34,{s:19,col:GRND,b:1,a:'center',d:'ltr'});
+  L('Page '+(i+1)+' of '+pages.length,60,H-78,{s:21,col:'#555'});L('Printed by: System',W/2-90,H-78,{s:21,col:'#555'});txt('Printed on '+tm+'  '+fd(today()),W-60,H-78,{s:21,col:'#555',a:'right',d:'ltr'});
+  txt(s.addr||'عبد القادر بحري شارع جامع السلام فوق قهوة الفاروق',W/2,H-50,{s:23,col:'#333',b:1,a:'center',d:'rtl'});txt('Tel: '+s.phone+'   |   Open daily 8 AM - 9 PM',W/2,H-22,{s:19,col:GRND,b:1,a:'center',d:'ltr'});
   if(LOGO.complete&&LOGO.naturalWidth){const lh=46,lw=lh*LOGO.naturalWidth/LOGO.naturalHeight;c.drawImage(LOGO,W-60-lw,H-52-0,0,0)}});
  return pages}
 /* PDF بسيط: كل صفحة صورة JPEG */
@@ -432,4 +432,4 @@ render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
 </body>
-  </html>
+ </html>
