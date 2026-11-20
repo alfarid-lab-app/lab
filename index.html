@@ -105,7 +105,7 @@ const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth
 const fd=d=>{const [y,m,dd]=(d||'').split('-');return dd?dd+'/'+m+'/'+y:''};
 const gl=g=>g==='F'?'أنثى':g==='M'?'ذكر':'';
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
-function waNum(p){p=String(p||'').replace(/\D/g,'');if(p.startsWith('00'))p=p.slice(2);if(p.startsWith('0'))p='20'+p.slice(1);return p}
+function waNum(p){p=String(p||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g,'');if(p.startsWith('00'))p=p.slice(2);if(p.startsWith('20')&&p.length>=12)return p;if(p.startsWith('0'))return '20'+p.slice(1);if(p.length===10&&p[0]==='1')return '20'+p;return p}
 
 /* ============ مرجع النتائج ============ */
 function range(it,g){let l=it.low,h=it.high;if(g==='F'&&(it.lowF!==''||it.highF!=='')){l=it.lowF;h=it.highF}return[l,h]}
@@ -301,8 +301,12 @@ async function report(id){const v=S.visits.find(x=>x.id===id),p=S.patients.find(
  const fname=(p.name.replace(/[\\/:*?"<>|]/g,'')+'_'+v.date+'.pdf');RP={blob,fname,p,v};
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>تقرير ${esc(p.name)}</h2>
  ${pages.map((cv,k)=>`<img id="pv" alt="صفحة ${k+1}" src="${cv.toDataURL('image/jpeg',0.8)}">`).join('')}
- <div class="row"><button class="btn w grow" onclick="shareR()">📲 إرسال واتساب</button><button class="btn s" onclick="dl(RP.blob,RP.fname)">⬇ تنزيل PDF</button><button class="btn s" onclick="closeM()">إغلاق</button></div>
- <div class="muted" style="margin-top:8px">على الموبايل: هتختار واتساب وبعدها المريض. على الكمبيوتر: هينزل الملف وتفتح محادثة واتساب المريض وتسحبه فيها.</div></div></div>`}
+ <div class="row"><button class="btn w grow" onclick="waChat()">📲 فتح واتساب المريض</button></div>
+ <div class="row" style="margin-top:8px"><button class="btn s grow" onclick="shareR()">مشاركة الملف (اختار المريض بنفسك)</button><button class="btn s" onclick="dl(RP.blob,RP.fname)">⬇ تنزيل PDF</button><button class="btn s" onclick="closeM()">إغلاق</button></div>
+ <div class="muted" style="margin-top:8px">"فتح واتساب المريض": بينزل ملف PDF وبيفتح محادثة المريض برقمه المسجل على طول، وانت بس ترفق الملف (📎 مستند واختار الملف). لو مفيش رقم مسجل بيفتح قايمة المشاركة.</div></div></div>`}
+function waChat(){const{blob,fname,p,v}=RP;const n=waNum(p.phone);if(n.length<11){toast('مفيش رقم تليفون مسجل للمريض');shareR();return}
+ const msg='السلام عليكم '+p.name+'\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
+ dl(blob,fname);window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');toast('الملف نزل. ارفقه في المحادثة 📎')}
 async function shareR(){const{blob,fname,p,v}=RP;const msg='السلام عليكم '+p.name+'\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
  const file=new File([blob],fname,{type:'application/pdf'});
  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:msg,title:fname});return}catch(e){if(e.name==='AbortError')return}}
