@@ -373,13 +373,6 @@ function drawReport(v,p){const pages=[];let cv,c,y,pg=0;const s=S.settings;const
  {const gc=v.cm!==undefined?v.cm:autoCm(v.items),para=[];if(v.notes)para.push(v.notes);String(gc||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>para.push(s));
   if(para.length){if(y+110>limit)newPage(true);y+=22;L('Comments :',X1,y+26,{b:1,s:26,col:'#000',f:SERIF});y+=40;
    para.forEach(t=>{wrap(t,W-2*X1,22).forEach(l=>{if(y+34>limit){newPage(true);y+=20}y+=30;txt(l,X1,y,{s:22,a:'left',d:/[\u0600-\u06ff]/.test(l)?'rtl':'ltr',col:'#000',f:SERIF})});y+=14});y+=10}}
- if(v.items.length){const R=interpret(v.items,p.gender);
-  const sec=(title,arr,empty)=>{if(y+110>limit)newPage(true);y+=26;ul(title,X1,y+28,{b:1,s:28,col:'#000',f:SERIF});y+=46;
-   if(!arr.length){y+=14;L(empty,X1,y+14,{s:23,col:'#000',f:SERIF});y+=26;return}
-   arr.forEach(t=>{const ls=wrap(t,W-240,23);if(y+ls.length*30+14>limit){newPage(true)}y+=10;ls.forEach((l,k)=>{y+=30;if(k===0){c.fillStyle=GRN;c.beginPath();c.arc(78,y-8,5,0,7);c.fill()}L(l,100,y,{s:23,col:'#000',f:SERIF})})});y+=8};
-  sec('Possible Interpretations',R.dx,R.abn?'No specific pattern identified from the abnormal values.':'All reported values are within the reference ranges.');
-  if(R.abn)sec('Suggested Follow-up Tests',R.rec,'None.');
-  if(y+90>limit)newPage(true);y+=22;wrap('Automated interpretive suggestions to support, not replace, clinical judgment. They are not a diagnosis. Please correlate with the clinical picture and consult your physician.',W-120,18).forEach(l=>{y+=24;L(l,60,y,{s:18,col:'#222',f:SERIF})})}
  if(y>H-345)newPage(true);
  L('Reviewed By :',640,H-250,{b:1,s:24,col:'#222'});
  {const cx=W-250,cy=H-250,B='#1f3fa8';c.save();c.translate(cx,cy);c.rotate(-0.12);c.scale(.72,.72);c.globalAlpha=.88;c.strokeStyle=B;c.fillStyle=B;
@@ -431,4 +424,4 @@ render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
 </body>
-       </html>
+ </html>
