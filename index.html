@@ -403,11 +403,10 @@ async function makePDF(pages){const enc=new TextEncoder();const parts=[];let off
   o(iid,()=>{add('<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpgs[k].length+' >>\nstream\n');add(jpgs[k]);add('\nendstream')})});
  const xo=off,tot=3+n*3;add('xref\n0 '+tot+'\n0000000000 65535 f \n');for(let i=1;i<tot;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
  add('trailer\n<< /Size '+tot+' /Root 1 0 R >>\nstartxref\n'+xo+'\n%%EOF');return new Blob(parts,{type:'application/pdf'})}
-async function printR(id,lh){await LOGOREADY;const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);toast('بجهّز الطباعة...');
- const pages=drawReport(v,p,lh);const imgs=pages.map(cv=>'<img src="'+cv.toDataURL('image/jpeg',0.92)+'">').join('');
- const f=document.createElement('iframe');f.style.cssText='position:fixed;width:0;height:0;border:0;right:0;bottom:0';document.body.appendChild(f);
- f.srcdoc='<html><head><style>@page{size:A4;margin:0}html,body{margin:0;padding:0}img{display:block;width:210mm;height:297mm;page-break-after:always}img:last-child{page-break-after:auto}</style></head><body>'+imgs+'</body></html>';
- f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('الطباعة مش متاحة هنا')}setTimeout(()=>f.remove(),60000)},400)}}
+async function printR(id,lh){const w=window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملف...</p>');
+ await LOGOREADY;const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);toast('بجهّز الطباعة...');
+ const pages=drawReport(v,p,lh);const blob=await makePDF(pages);const url=URL.createObjectURL(blob);
+ if(w){w.location.href=url;toast('اطبع من النافذة الجديدة: ورق A4 وحجم فعلي 100%')}else{dl(blob,'report-'+(lh?'letterhead':'plain')+'.pdf');toast('الملف نزل. افتحه واطبعه: ورق A4 وحجم فعلي 100%')}}
 let RP=null;
 async function report(id){await LOGOREADY;const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);
  toast('بجهّز التقرير...');const pages=drawReport(v,p);const blob=await makePDF(pages);
