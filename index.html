@@ -101,6 +101,10 @@ const HB={"T":["","1 week result","10 days result","45 days result","48h result"
 function nk(n){return String(n).toLowerCase().replace(/[^a-z0-9]/g,'')}
 function mergeCat(force){if(S.catv&&!force)return;const have=new Set(S.tests.map(t=>nk(t.name)));let i=0;HB.R.forEach(r=>{i++;const k=nk(r[1]);if(have.has(k))return;have.add(k);S.tests.push({id:'h'+i,cat:r[0],name:r[1],type:r[2]?'num':'txt',unit:r[2],low:'',high:'',lowF:'',highF:'',normal:'',price:0,spec:HB.S[r[3]],tat:HB.T[r[4]]})});S.catv=1;save()}
 
+const DEFR=`FT3|2.3|4.2;FT4|0.8|1.8;T3|0.8|2;T4|5.1|14.1;PRL (Prolactin)|4|15|4|25;Cortisol|6|23;PSA (Prostatic specific antigen)|0|4;AFP (Alpha-fetoprotein)|0|10;CEA|0|5;Ca 125|0|35;Ca 15.3|0|30;Ca 19.9|0|37;Insulin|2.6|24.9;C-peptide|0.8|3.1;CRP (C-reactive protein)|0|5;ESR|0|15|0|20;ASO|0|200;ASO (Latex)|0|200;RF (Rheumatoid factor)|0|14;Carbamazepine (Tegretol®)|4|12;Digoxin (Lanoxin®)|0.8|2;Lithium|0.6|1.2;Phenobarbital|15|40;Phenytoin (Epanutin®, Epilog®, Dilantin®)|10|20;Theophylline|10|20;Valproic acid (Depakene®)|50|100;Lamotrigine (Lamictal®)|3|14;Levetiracetam (Keppra®, Tiratam®, Levepex®)|12|46;Alpha-1 antitrypsin|90|200;Antithrombin III|80|120;B2M|0.8|2.2;Ceruloplasmin|20|60;C3 (Complement 3)|90|180;C4 (Complement 4)|10|40;D-dimer (by latex)|0|500;Factor II|50|150;Factor V|50|150;Factor VII|50|150;Factor VIII|50|150;Factor IX|50|150;Factor X|50|150;Factor XI|50|150;Factor XII|50|150;Factor XIII|70|140;G6PD|4.6|13.5;Haptoglobin|30|200;Homocysteine|5|15;IgG (Immunoglobulin G)|700|1600;IgM (Immunoglobulin M)|40|230;IgA (Immunoglobulin A)|70|400;IgE (Immunoglobulin E)|0|100;Pre-albumin (trans-thyretin)|20|40;Protein C|70|140;Protein S|60|140;Free Protein S|60|130;Transferrin|200|360;Thrombin time|14|19;Von-Willebrand factor Ag (concentration)|50|150;ACE (Angiotensin converting enzyme)|8|52;Aldolase|1|7.5;Lactate|4.5|19.8;Myoglobin|25|72;PCT-Q (Procalcitonin)|0|0.5;Prothrombin time, activity & INR|70|100;Activated Partial Thromboplastin|25|35;Glucose|70|100;HbA1c (Glycosylated haemoglobin)|0|5.7;Fructosamine|200|285;Microalbuminuria|0|20;Microalbuminuria /24h|0|30;Apolipoprotein A1|110|180|120|205;Apolipoprotein B|60|130;Non HDL Cholesterol|0|130;VLDL Cholesterol|5|40;Lipoprotein (a)|0|30;GGtγ-GT|8|61|5|36;5NT (5′-Nucleotidase)|0|11;A/G ratio (Albumin/Globulin )|1.1|2.5;Alkaline phosphatase|44|147;Bile acids|0|10;Bilirubin, Total|0.3|1.2;Bilirubin, Direct|0|0.3;Bilirubin - Indirect|0.2|0.8;Globulin|2|3.5;SGOT (AST)|5|40;SGPT (ALT)|5|40;BUN (Blood urea nitrogen)|7|20;Protein in urine|0|150;Anion gap|8|16;Bicarbonate|22|29;Calcium (total)|8.6|10.2;Calcium (total) Corrected|8.6|10.2;Calcium (total) in urine|100|300;Chloride|98|107;Copper|70|140;Magnesium|1.7|2.2;K (Potassium)|3.5|5.1;Na (Sodium)|135|145;Zinc|60|120;Amylase|28|100;Lipase|13|60;CPK (CK total)|39|308|26|192;CK – MB CKMB (mass, immunological)|0|5;LDH|140|280;Pro-BNP (Pro B-type natriuretic peptide)|0|125;Troponin-T (High sensitive)|0|14;ADA (Adenosine deaminase)|0|40`,DEFN=`HBsAg;HCV Ab;HIV Ag/Ab;Urine - Albumin;Urine - Sugar;Urine - Ketones;Urine - Blood;Urine - Bilirubin;Urine - Nitrite;Stool - Occult Blood`;
+function applyDefR(){if(S.rngv)return;const m={};DEFR.split(';').forEach(r=>{const a=r.split('|');m[nk(a[0])]=a});const n=new Set(DEFN.split(';').map(nk));
+ S.tests.forEach(t=>{const a=m[nk(t.name)];if(t.type==='num'&&a&&t.low===''&&t.high===''&&t.lowF===''&&t.highF===''){t.low=a[1];t.high=a[2];t.lowF=a[3]||'';t.highF=a[4]||'';t.rdef=1}
+  else if(t.type==='txt'&&n.has(nk(t.name))&&!t.normal){t.normal='Negative';t.rdef=1}});S.rngv=1;save()}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.patients)return s}catch(e){}
  return {patients:[],visits:[],tests:seed(),settings:{name:'المعمل الفريد للتحاليل الطبية الكيميائية',phone:'01224054573',hours:'مواعيد العمل: يوميًا من ٨ صباحًا حتى ١٠ مساءً',owner:'د. عاطف عبيد حليم',footer:'النتائج تُفسَّر بواسطة الطبيب المعالج مع الحالة الإكلينيكية.'},seq:1000}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert('المساحة ممتلئة. اعمل نسخة احتياطية الأول.')}}
@@ -133,16 +137,21 @@ function render(){
 
 /* ============ المرضى ============ */
 function vPatients(){
- $('app').innerHTML=`<div class="row"><input class="grow" id="q" placeholder="ابحث بالاسم أو رقم التليفون" oninput="listP()"><button class="btn" onclick="pForm()">+ مريض جديد</button></div>
- <div class="muted" style="margin:8px 2px" id="cnt"></div><div id="pl"></div>`;listP()}
-function listP(){const q=($('q')?.value||'').trim().toLowerCase();
- let a=S.patients.filter(p=>!q||p.name.toLowerCase().includes(q)||(p.phone||'').includes(q));
+ $('app').innerHTML=`<div class="row"><input class="grow" id="q" placeholder="ابحث بالاسم أو رقم التليفون أو رقم الزيارة" oninput="listP()" onkeydown="if(event.key==='Enter')pEnter()" autocomplete="off"><button class="btn" onclick="pForm()">+ مريض جديد</button></div>
+ <div class="muted" style="margin:8px 2px" id="cnt"></div><div id="pl"></div>`;listP();if(!matchMedia('(pointer:coarse)').matches)$('q').focus()}
+function dg(x){return String(x||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g,'')}
+function pk(x){return dg(x).replace(/^(0020|20|0)/,'')}
+let LQ=[];
+function listP(){const q0=($('q')?.value||'').trim(),q=q0.toLowerCase();const ph=/^[+\d\s\-٠-٩]+$/.test(q0)&&dg(q0).length>=2,qk=pk(q0),qd=dg(q0);
+ const vm=ph&&qd.length>=6?S.visits.filter(v=>v.no&&v.no.includes(qd)):[];LQ=vm;
+ let a=S.patients.filter(p=>!q||(ph?((qk&&pk(p.phone).includes(qk))||vm.some(v=>v.pid===p.id)||p.name.toLowerCase().includes(q)):(p.name.toLowerCase().includes(q)||(p.phone||'').includes(q))));
  const last=p=>S.visits.filter(v=>v.pid===p.id).map(v=>v.date).sort().pop()||'';
  a.sort((x,y)=>(last(y)||y.created).localeCompare(last(x)||x.created));
  $('cnt').textContent=S.patients.length+' مريض'+(q?' - النتيجة: '+a.length:'');
  $('pl').innerHTML=a.length?a.map(p=>{const n=S.visits.filter(v=>v.pid===p.id).length;
- return `<div class="card item" onclick="go('patient',{id:'${p.id}'})"><div><b>${esc(p.name)}</b><span class="muted">${esc(p.phone||'بدون رقم')} ${p.age?' - '+esc(p.age)+' سنة':''} ${gl(p.gender)?' - '+gl(p.gender):''}</span></div><span class="tag">${n} زيارة</span></div>`}).join(''):`<div class="empty">${S.patients.length?'مفيش نتائج':'لسه مفيش مرضى. دوس "مريض جديد" وابدأ.'}</div>`}
-function pForm(id){const p=S.patients.find(x=>x.id===id)||{};
+ return `<div class="card item" onclick="go('patient',{id:'${p.id}'})"><div><b>${esc(p.name)}</b><span class="muted">${esc(p.phone||'بدون رقم')} ${p.age?' - '+esc(p.age)+' سنة':''} ${gl(p.gender)?' - '+gl(p.gender):''}</span></div><span class="tag">${n} زيارة</span></div>`}).join(''):`<div class="empty">${S.patients.length?'مفيش نتائج':'لسه مفيش مرضى. دوس "مريض جديد" وابدأ.'}${ph&&qk.length>=9?`<br><button class="btn" style="margin-top:10px" onclick="pForm('','${esc(q0)}')">+ مريض جديد بالرقم ${esc(q0)}</button>`:''}</div>`}
+function pEnter(){const e=LQ.find(v=>v.no===dg($('q').value));if(e)return go('view',{id:e.id});const r=document.querySelectorAll('#pl .item');if(r.length===1)r[0].click()}
+function pForm(id,ph){const p=S.patients.find(x=>x.id===id)||{phone:ph||''};
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>${id?'تعديل بيانات المريض':'مريض جديد'}</h2>
  <label>الاسم *</label><input id="fn" value="${esc(p.name||'')}">
  <label>رقم التليفون (واتساب)</label><input id="fp" type="tel" inputmode="tel" value="${esc(p.phone||'')}" placeholder="01xxxxxxxxx">
@@ -174,10 +183,11 @@ function pDel(id){if(!confirm('تحذف المريض وكل نتايجه؟ مي�
 let D=null; // مسودة
 function vEdit(){
  if(!D||D.key!==(V.id||'n'+V.pid)){const v=V.id&&S.visits.find(x=>x.id===V.id);
-  D=v?{key:V.id,id:v.id,pid:v.pid,date:v.date,notes:v.notes||'',cm:v.cm,paid:v.paid||'',disc:v.disc||'',items:JSON.parse(JSON.stringify(v.items))}:{key:'n'+V.pid,pid:V.pid,date:today(),notes:'',paid:'',disc:'',items:[]}}
+  D=v?{key:V.id,id:v.id,no:v.no,doc:v.doc||'',pid:v.pid,date:v.date,notes:v.notes||'',cm:v.cm,paid:v.paid||'',disc:v.disc||'',items:JSON.parse(JSON.stringify(v.items))}:{key:'n'+V.pid,pid:V.pid,doc:'',date:today(),notes:'',paid:'',disc:'',items:[]}}
  const p=S.patients.find(x=>x.id===D.pid);
  $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${p.age?p.age+' سنة - ':''}${gl(p.gender)}</span>
- <label>تاريخ الزيارة</label><input type="date" id="dd" value="${D.date}" onchange="D.date=this.value"></div>
+ <label>تاريخ الزيارة</label><input type="date" id="dd" value="${D.date}" onchange="D.date=this.value">
+ <label>الطبيب المعالج (اختياري، بيظهر في التقرير)</label><input id="dd2" list="dl" value="${esc(D.doc||'')}" oninput="D.doc=this.value" placeholder="د. ..."><datalist id="dl">${[...new Set(S.visits.map(x=>x.doc).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist></div>
  <h3>١) اختار التحاليل</h3><input id="tq" autocomplete="off" placeholder="اكتب اسم التحليل أو اختصاره (CBC, TSH, FBS ...)" oninput="sug()" onkeydown="if(event.key==='Enter'){event.preventDefault();sugGo()}"><div id="sg"></div><div class="muted" style="margin:8px 0 2px">أو اختار من القوائم:</div><div id="pk"></div>
  <h3>٢) النتائج</h3><div class="card" id="rs"></div>
  <div class="card"><label>تعليقات إرشادية (تتولد تلقائيًا من التحاليل مع مراجع الإرشادات - راجعها وعدّلها)</label><textarea id="cm" rows="7" style="direction:ltr;text-align:left" oninput="D.cm=this.value">${esc(D.cm!==undefined?D.cm:autoCm(D.items))}</textarea><button class="btn s sm" onclick="D.cm=undefined;$('cm').value=autoCm(D.items)">↻ إعادة التوليد التلقائي</button></div>
@@ -197,22 +207,25 @@ function sugGo(){if(SG.length)sugAdd(SG[0].id)}
 function pick(){const q='';const sel=new Set(D.items.map(i=>i.tid));
  const groups=Object.keys(CATS).map(c=>({c,l:S.tests.filter(t=>t.cat===c&&(!q||t.name.toLowerCase().includes(q)||CATS[c].includes(q)))})).filter(g=>g.l.length);
  $('pk').innerHTML=groups.map(g=>`<details ${q||g.l.some(t=>sel.has(t.id))?'open':''}><summary>${CATS[g.c]} (${g.l.length})</summary><div class="card" style="margin:4px 0">${g.l.map(t=>`<label class="chk"><input type="checkbox" ${sel.has(t.id)?'checked':''} onchange="tog('${t.id}',this.checked)"><span class="n" style="direction:ltr;text-align:right">${esc(t.name)}</span>${t.price?`<span class="muted">${t.price} ج</span>`:''}</label>`).join('')}</div></details>`).join('')||'<div class="empty">مفيش تحليل بالاسم ده. ضيفه من تبويب التحاليل.</div>'}
-function tog(id,on){if(on){const t=S.tests.find(x=>x.id===id);D.items.push({tid:t.id,name:t.name,cat:t.cat,type:t.type,unit:t.unit,low:t.low,high:t.high,lowF:t.lowF,highF:t.highF,normal:t.normal,price:t.price,value:t.type==='txt'?(t.normal||''):''})}
+function tog(id,on){if(on){const t=S.tests.find(x=>x.id===id);D.items.push({tid:t.id,name:t.name,cat:t.cat,type:t.type,unit:t.unit,low:t.low,high:t.high,lowF:t.lowF,highF:t.highF,normal:t.normal,price:t.price,rdef:t.rdef,value:t.type==='txt'?(t.normal||''):''})}
  else D.items=D.items.filter(i=>i.tid!==id);rs();tot()}
 function rs(){const p=S.patients.find(x=>x.id===D.pid);
- $('rs').innerHTML=D.items.length?D.items.map((i,k)=>`<div class="res ${flag(i,p.gender)?'hi':''}" id="rr${k}"><div><span style="direction:ltr;display:block;text-align:right">${esc(i.name)}</span><span class="muted" style="direction:ltr;display:block;text-align:right">${esc(refText(i,p.gender))} ${esc(i.unit)}</span></div>
+ $('rs').innerHTML=D.items.length?D.items.map((i,k)=>`<div class="res ${flag(i,p.gender)?'hi':''}" id="rr${k}"><div><span style="direction:ltr;display:block;text-align:right">${esc(i.name)}</span><span class="muted" style="direction:ltr;display:block;text-align:right">${esc(refText(i,p.gender))} ${esc(i.unit)}${i.rdef?' <span class="tag" style="background:#fff3cd;color:#8a6d00">⚠ مدى افتراضي - راجعه</span>':''}</span></div>
  <input value="${esc(i.value)}" placeholder="النتيجة" ${i.type==='num'?'inputmode="decimal"':''} oninput="D.items[${k}].value=this.value;document.getElementById('rr${k}').classList.toggle('hi',!!flag(D.items[${k}],'${p.gender}'))"></div>`).join(''):'<div class="empty">اختار تحاليل من فوق</div>'}
+function newNo(d){const k=String(d||today()).replace(/-/g,'').slice(2);let n=S.visits.filter(x=>x.no&&x.no.startsWith(k)).length+1,c;do{c=k+String(n++).padStart(2,'0')}while(S.visits.some(x=>x.no===c));return c}
+function vno(v){return v.no||String(v.id).replace(/[^a-z0-9]/gi,'').slice(-6).toUpperCase()}
 function sum(it){return it.reduce((a,i)=>a+(+i.price||0),0)}
 function tot(){const s=sum(D.items),d=+D.disc||0,n=s-d,pd=+D.paid||0;if($('tt'))$('tt').textContent=s?`الإجمالي ${s} - الخصم ${d} = ${n} ج | المتبقي ${n-pd} ج`:''}
 function vSave(){if(!D.items.length){toast('اختار تحليل واحد على الأقل');return}
- const v={id:D.id||uid('v'),pid:D.pid,date:D.date||today(),notes:D.notes,cm:D.cm,paid:D.paid,disc:D.disc,items:D.items};
- const i=S.visits.findIndex(x=>x.id===v.id);if(i>=0)S.visits[i]=v;else S.visits.push(v);save();D=null;go('view',{id:v.id})}
+ const v={id:D.id||uid('v'),no:D.no,doc:(D.doc||'').trim(),pid:D.pid,date:D.date||today(),notes:D.notes,cm:D.cm,paid:D.paid,disc:D.disc,items:D.items};
+ const i=S.visits.findIndex(x=>x.id===v.id);if(!v.no)v.no=newNo(v.date);if(i>=0)S.visits[i]=v;else S.visits.push(v);save();D=null;go('view',{id:v.id})}
 
 /* ============ عرض زيارة ============ */
 function vView(){const v=S.visits.find(x=>x.id===V.id);if(!v)return go('patients');const p=S.patients.find(x=>x.id===v.pid);
  const cats=Object.keys(CATS).filter(c=>v.items.some(i=>(i.cat||'oth')===c));const s=sum(v.items),n=s-(+v.disc||0);
  $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${p.age?p.age+' سنة - ':''}${gl(p.gender)} - ${fd(v.date)}</span>
- <div class="row" style="margin-top:10px"><button class="btn w" onclick="report('${v.id}')">📄 تقرير PDF / واتساب</button><button class="btn s sm" onclick="printR('${v.id}',false)">🖨 طباعة ورق أبيض</button><button class="btn s sm" onclick="printR('${v.id}',true)">🖨 طباعة ورق الليتر هيد</button><button class="btn s sm" onclick="go('edit',{id:'${v.id}',pid:'${p.id}'})">تعديل النتائج</button><button class="btn s sm" onclick="go('patient',{id:'${p.id}'})">ملف المريض</button><button class="btn d sm" onclick="vDel('${v.id}')">حذف</button></div></div>
+ <div class="muted">رقم الزيارة: ${esc(vno(v))}${v.doc?' - الطبيب المعالج: '+esc(v.doc):''}</div>
+ <div class="row" style="margin-top:10px"><button class="btn w" onclick="report('${v.id}')">📄 تقرير PDF / واتساب</button><button class="btn s sm" onclick="printR('${v.id}',false)">🖨 طباعة ورق أبيض</button><button class="btn s sm" onclick="printR('${v.id}',true)">🖨 طباعة ورق الليتر هيد</button><button class="btn s sm" onclick="lblForm('${v.id}')">🏷 ملصقات الأنابيب</button><button class="btn s sm" onclick="go('edit',{id:'${v.id}',pid:'${p.id}'})">تعديل النتائج</button><button class="btn s sm" onclick="go('patient',{id:'${p.id}'})">ملف المريض</button><button class="btn d sm" onclick="vDel('${v.id}')">حذف</button></div></div>
  <div class="card" style="overflow-x:auto;direction:ltr"><table class="ltr"><tr><th class="l">Test</th><th class="l">Result</th><th class="l">Unit</th><th class="l">Reference</th></tr>
  ${cats.map(c=>`<tr><td colspan="4" style="background:#f4f7f7;font-weight:bold;color:var(--td)">${CATS[c]}</td></tr>`+v.items.filter(i=>(i.cat||'oth')===c).map(i=>{const f=flag(i,p.gender);return `<tr><td class="l">${esc(i.name)}</td><td class="l ${f?'hi':''}">${esc(i.value)||'-'} ${f==='H'?'▲':f==='L'?'▼':f?'●':''}</td><td class="l">${esc(i.unit)}</td><td class="l">${esc(refText(i,p.gender))}</td></tr>`}).join('')).join('')}</table></div>
  ${v.notes?`<div class="card"><b>ملاحظات:</b> ${esc(v.notes)}</div>`:''}${s?`<div class="card muted">الإجمالي ${s} - الخصم ${+v.disc||0} = <b>${n} ج</b> | المدفوع ${+v.paid||0} | المتبقي ${n-(+v.paid||0)}</div>`:''}`}
@@ -220,12 +233,12 @@ function vDel(id){if(!confirm('تحذف الزيارة دي؟'))return;const v=S
 
 /* ============ كتالوج التحاليل ============ */
 function vCatalog(){
- $('app').innerHTML=`<div class="row"><input class="grow" id="cq" placeholder="ابحث في التحاليل" oninput="listC()"><button class="btn" onclick="tForm()">+ تحليل جديد</button></div><div id="cl" style="margin-top:10px"></div>`;listC()}
+ $('app').innerHTML=`<div class="row"><input class="grow" id="cq" placeholder="ابحث في التحاليل (اكتب: افتراضي لعرض المدى الافتراضي اللي محتاج مراجعة)" oninput="listC()"><button class="btn" onclick="tForm()">+ تحليل جديد</button></div><div id="cl" style="margin-top:10px"></div>`;listC()}
 function listC(){const q=($('cq')?.value||'').trim().toLowerCase();
- $('cl').innerHTML=Object.keys(CATS).map(c=>{const l=S.tests.filter(t=>t.cat===c&&(!q||t.name.toLowerCase().includes(q)));if(!l.length)return '';
- return `<details ${q?'open':''}><summary>${CATS[c]} (${l.length})</summary><div class="card" style="margin:4px 0"><table>${l.map(t=>`<tr onclick="tForm('${t.id}')" style="cursor:pointer"><td class="l">${esc(t.name)}</td><td class="l muted">${esc(refText(t,'M'))} ${esc(t.unit)}</td><td>${t.price?t.price+' ج':'<span class="muted">بدون سعر</span>'}</td></tr>`).join('')}</table></div></details>`}).join('')||'<div class="empty">مفيش نتائج</div>'}
+ $('cl').innerHTML=Object.keys(CATS).map(c=>{const l=S.tests.filter(t=>t.cat===c&&(q==='افتراضي'?t.rdef:(!q||t.name.toLowerCase().includes(q))));if(!l.length)return '';
+ return `<details ${q?'open':''}><summary>${CATS[c]} (${l.length})</summary><div class="card" style="margin:4px 0"><table>${l.map(t=>`<tr onclick="tForm('${t.id}')" style="cursor:pointer"><td class="l">${esc(t.name)}</td><td class="l muted">${esc(refText(t,'M'))} ${esc(t.unit)}${t.rdef?' <span class="tag" style="background:#fff3cd;color:#8a6d00">افتراضي</span>':''}</td><td>${t.price?t.price+' ج':'<span class="muted">بدون سعر</span>'}</td></tr>`).join('')}</table></div></details>`}).join('')||'<div class="empty">مفيش نتائج</div>'}
 function tForm(id){const t=S.tests.find(x=>x.id===id)||{cat:'oth',type:'num',unit:'',low:'',high:'',lowF:'',highF:'',normal:'',price:''};
- $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>${id?'تعديل تحليل':'تحليل جديد'}</h2>
+ $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>${id?'تعديل تحليل':'تحليل جديد'}</h2>${t.rdef?'<div class="card" style="background:#fff3cd;color:#6b5300">⚠ المدى ده افتراضي (قيم عامة للبالغين) ومش مراجَع. راجعه مع الكيت/الجهاز عندك، وعدّله لو مختلف، ولما تدوس حفظ العلامة بتتشال.</div>':''}
  <label>اسم التحليل *</label><input id="tn" dir="ltr" value="${esc(t.name||'')}">
  <div class="row"><div class="grow"><label>القسم</label><select id="tc">${Object.entries(CATS).map(([k,l])=>`<option value="${k}" ${t.cat===k?'selected':''}>${l}</option>`).join('')}</select></div>
  <div class="grow"><label>السعر (جنيه)</label><input id="tpr" type="number" inputmode="decimal" value="${esc(t.price)}"></div></div>
@@ -238,10 +251,37 @@ function tForm(id){const t=S.tests.find(x=>x.id===id)||{cat:'oth',type:'num',uni
  <div class="row" style="margin-top:14px"><button class="btn grow" onclick="tSave('${id||''}')">حفظ</button>${id?`<button class="btn d" onclick="tDel('${id}')">حذف</button>`:''}<button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`;tt();if(!id)$('tn').focus()}
 function tt(){const n=$('ty').value==='num';$('tn1').style.display=n?'':'none';$('tn2').style.display=n?'none':''}
 function tSave(id){const name=$('tn').value.trim();if(!name){toast('اكتب اسم التحليل');return}
- const d={name,cat:$('tc').value,price:$('tpr').value===''?0:+$('tpr').value,type:$('ty').value,unit:$('tu').value.trim(),low:$('tl').value,high:$('th').value,lowF:$('tlf').value,highF:$('thf').value,normal:$('tno').value.trim()};
+ const d={name,cat:$('tc').value,price:$('tpr').value===''?0:+$('tpr').value,type:$('ty').value,unit:$('tu').value.trim(),low:$('tl').value,high:$('th').value,lowF:$('tlf').value,highF:$('thf').value,normal:$('tno').value.trim(),rdef:0};
  if(d.type==='txt'){d.unit='';d.low=d.high=d.lowF=d.highF=''}else d.normal='';
  if(id)Object.assign(S.tests.find(x=>x.id===id),d);else{d.id=uid('t');S.tests.push(d)}save();closeM();listC();toast('تم الحفظ')}
 function tDel(id){if(!confirm('تحذف التحليل من القائمة؟ النتائج القديمة مش هتتأثر.'))return;S.tests=S.tests.filter(x=>x.id!==id);save();closeM();listC()}
+
+/* ============ ملصقات الأنابيب ============ */
+const C39={'0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw','5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn','*':'nwnnwnwnn'};
+function bars(c,code,x,y,w,h){const t='*'+code+'*';let u=0;t.split('').forEach(ch=>{u+=C39[ch].split('').reduce((a,e)=>a+(e==='w'?3:1),0)+1});u-=1;const m=w/u;let cx=x;c.fillStyle='#000';
+ t.split('').forEach(ch=>{C39[ch].split('').forEach((e,i)=>{const ww=(e==='w'?3:1)*m;if(i%2===0)c.fillRect(cx,y,ww,h);cx+=ww});cx+=m})}
+function tubeOf(it){const t=S.tests.find(x=>x.id===it.tid)||{},n=it.name||'',sp=t.spec||'';
+ if(/^urine/i.test(n)||/urine/i.test(sp)&&!/serum|blood/i.test(sp))return'Urine';if(/^stool/i.test(n)||/stool/i.test(sp))return'Stool';if(/CSF/i.test(sp))return'CSF';
+ if(/EDTA/i.test(sp))return'EDTA';if(/citrat/i.test(sp))return'Citrate';if(/heparin/i.test(sp))return'Heparin';if(/fluoride/i.test(sp))return'Fluoride';
+ if(it.cat==='cbc'||/^(ESR|HbA1c|Blood group|Hb electro)/i.test(n))return'EDTA';if(/^(PT\b|INR|prothrombin|activated partial|aPTT|D-dimer|thrombin|factor|fibrinogen)/i.test(n))return'Citrate';return'Serum'}
+function tubeLabels(v,p){const g={};v.items.forEach(i=>{const k=tubeOf(i);(g[k]=g[k]||[]).push(i)});if(!v.no){v.no=newNo(v.date);save()}
+ return Object.keys(g).map(k=>{const cv=document.createElement('canvas');cv.width=600;cv.height=360;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,600,360);c.strokeStyle='#bbb';c.lineWidth=2;c.strokeRect(1,1,598,358);
+  c.fillStyle='#000';c.direction=/[\u0600-\u06ff]/.test(p.name)?'rtl':'ltr';c.textAlign='left';let fs=38;c.font='bold '+fs+'px '+FONT;while(c.measureText(p.name).width>560&&fs>20){fs-=2;c.font='bold '+fs+'px '+FONT}c.fillText(p.name,20,50);
+  c.direction='ltr';c.font='24px '+FONT;c.fillText((p.age?p.age+'Y ':'')+(p.gender==='F'?'F':p.gender==='M'?'M':'')+'   '+fd(v.date),20,88);
+  bars(c,v.no,40,104,520,120);c.textAlign='center';c.font='bold 30px '+FONT;c.fillText(v.no,300,260);
+  c.textAlign='left';c.font='bold 28px '+FONT;c.fillText(k,20,320);c.textAlign='right';c.font='22px '+FONT;c.fillText(g[k].length+(g[k].length>1?' tests':' test'),580,320);return cv})}
+function lblForm(id){$('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>ملصقات الأنابيب</h2><div class="muted">بيتعمل ملصق لكل نوع أنبوبة (حسب نوع العينة) عليه الاسم والتاريخ وباركود برقم الزيارة. اكتب رقم الزيارة في خانة البحث أو اسكانه بالباركود سكانر عشان تفتح المريض.</div>
+ <label>عدد النسخ لكل أنبوبة</label><input id="lcn" type="number" min="1" max="10" value="1">
+ <div class="row" style="margin-top:12px"><button class="btn grow" onclick="lblGo('${id}',0)">طابعة ملصقات 50×30 مم</button><button class="btn s grow" onclick="lblGo('${id}',1)">ورقة A4 (ملصقات متعددة)</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`}
+async function lblGo(id,a4){const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);const n=Math.max(1,Math.min(10,+$('lcn').value||1));
+ const w=window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملصقات...</p>');
+ const L=tubeLabels(v,p),all=[];L.forEach(l=>{for(let i=0;i<n;i++)all.push(l)});let pages,blob;
+ if(!a4){pages=all;blob=await makePDF(pages,141.73,85.04)}
+ else{pages=[];const cw=Math.round(66*W/210),ch=Math.round(cw*0.6),cols=3,rows=Math.floor((H-60)/ch);const per=cols*rows;
+  for(let k=0;k<all.length;k+=per){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,W,H);
+   all.slice(k,k+per).forEach((l,i)=>c.drawImage(l,Math.round((W-cols*cw)/2)+(i%cols)*cw,30+Math.floor(i/cols)*ch,cw-6,ch-6));pages.push(cv)}
+  blob=await makePDF(pages)}
+ const url=URL.createObjectURL(blob);closeM();if(w){w.location.href=url;toast(a4?'اطبع A4 بحجم فعلي 100%':'اطبع بحجم الملصق 50×30 وحجم فعلي 100%')}else dl(blob,'labels.pdf')}
 
 /* ============ الإعدادات والنسخ الاحتياطي ============ */
 function vSettings(){const s=S.settings;
@@ -308,15 +348,16 @@ function drawReport(v,p,lh){const pages=[];let cv,c,y,pg=0;const s=S.settings;co
   y=lh?LT:300;
   if(pg===1){txt('LABORATORY REPORT',W/2,y+30,{a:'center',b:1,s:30,col:TEAL,d:'ltr'});c.font='bold 30px '+FONT;const tw=c.measureText('LABORATORY REPORT').width;c.fillStyle=GRN;c.fillRect((W-tw)/2,y+38,tw,3);y+=70;
    const lab={s:21,col:'#6b6f73',b:1},val={s:25,b:1,col:'#222'};
-   c.fillStyle='#faf8f6';c.fillRect(60,y,W-120,150);c.strokeStyle='#d9d9d9';c.lineWidth=2;c.strokeRect(60,y,W-120,150);c.fillStyle=GRN;c.fillRect(60,y,8,150);
+   const BH=v.doc?190:150;c.fillStyle='#faf8f6';c.fillRect(60,y,W-120,BH);c.strokeStyle='#d9d9d9';c.lineWidth=2;c.strokeRect(60,y,W-120,BH);c.fillStyle=GRN;c.fillRect(60,y,8,BH);
    L('PATIENT NAME',92,y+40,lab);txt(p.name,92+0,y+82,{b:1,s:34,a:'left',d:'rtl',col:'#111'});
    L('AGE / SEX',92,y+122,lab);L((p.age?p.age+' Y':'-')+'  /  '+(p.gender==='F'?'Female':p.gender==='M'?'Male':'-'),260,y+122,val);
    c.fillStyle='#d9d9d9';c.fillRect(740,y+18,2,114);
-   L('VISIT NO.',770,y+40,lab);L(String(v.id).replace(/[^a-z0-9]/gi,'').slice(-6).toUpperCase(),1000,y+40,val);
+   if(v.doc){L('REFERRING DOCTOR',92,y+168,lab);txt(v.doc,420,y+168,{b:1,s:25,a:'left',d:/[\u0600-\u06ff]/.test(v.doc)?'rtl':'ltr',col:'#222'})}
+   L('VISIT NO.',770,y+40,lab);L(vno(v),1000,y+40,val);
    L('ATTENDANCE DATE',770,y+86,lab);L(fd(v.date),1000,y+86,val);
    L('REPORT DATE',770,y+122,lab);L(fd(today()),1000,y+122,val);
-   y+=185}
-  else{L('Patient: ',60,y+30,{s:22,col:'#6b6f73',b:1});txt(p.name,160,y+30,{s:24,b:1,a:'left',d:'rtl'});L('Visit No. '+String(v.id).replace(/[^a-z0-9]/gi,'').slice(-6).toUpperCase(),W-360,y+30,{s:22,col:'#6b6f73'});y+=60}
+   y+=v.doc?225:185}
+  else{L('Patient: ',60,y+30,{s:22,col:'#6b6f73',b:1});txt(p.name,160,y+30,{s:24,b:1,a:'left',d:'rtl'});L('Visit No. '+vno(v),W-360,y+30,{s:22,col:'#6b6f73'});y+=60}
   if(!noHead)headRow()}
  function headRow(){const f={s:22,b:1,col:'#6b6f73'};L('Test',X1,y+26,f);L('Result',X2,y+26,f);L('Unit',X3,y+26,f);L('Ref. Range',X4,y+26,f);c.fillStyle=TEAL;c.fillRect(60,y+38,W-120,3);y+=52}
  newPage();const limit=lh?H-LB-45:H-150;
@@ -349,7 +390,7 @@ function drawReport(v,p,lh){const pages=[];let cv,c,y,pg=0;const s=S.settings;co
   if(LOGO.complete&&LOGO.naturalWidth){const lh=46,lw=lh*LOGO.naturalWidth/LOGO.naturalHeight;c.drawImage(LOGO,W-60-lw,H-52-0,0,0)}});
  return pages}
 /* PDF بسيط: كل صفحة صورة JPEG */
-async function makePDF(pages){const enc=new TextEncoder();const parts=[];let off=0;const offs=[];
+async function makePDF(pages,PW,PH){PW=PW||595.28;PH=PH||841.89;const enc=new TextEncoder();const parts=[];let off=0;const offs=[];
  const add=d=>{const b=typeof d==='string'?enc.encode(d):d;parts.push(b);off+=b.length};
  const objs=[];const n=pages.length;add('%PDF-1.4\n');
  const jpgs=[];for(const cv of pages){const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.92));jpgs.push(new Uint8Array(await b.arrayBuffer()))}
@@ -357,9 +398,9 @@ async function makePDF(pages){const enc=new TextEncoder();const parts=[];let off
  o(1,'<< /Type /Catalog /Pages 2 0 R >>');
  o(2,'<< /Type /Pages /Count '+n+' /Kids ['+pages.map((_,k)=>(3+k*3)+' 0 R').join(' ')+'] >>');
  pages.forEach((_,k)=>{const pid=3+k*3,cid=pid+1,iid=pid+2;
-  o(pid,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 '+iid+' 0 R >> >> /Contents '+cid+' 0 R >>');
-  const cs='q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';o(cid,'<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');
-  o(iid,()=>{add('<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpgs[k].length+' >>\nstream\n');add(jpgs[k]);add('\nendstream')})});
+  o(pid,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /XObject << /Im0 '+iid+' 0 R >> >> /Contents '+cid+' 0 R >>');
+  const cs='q '+PW+' 0 0 '+PH+' 0 0 cm /Im0 Do Q';o(cid,'<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');
+  o(iid,()=>{add('<< /Type /XObject /Subtype /Image /Width '+pages[k].width+' /Height '+pages[k].height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpgs[k].length+' >>\nstream\n');add(jpgs[k]);add('\nendstream')})});
  const xo=off,tot=3+n*3;add('xref\n0 '+tot+'\n0000000000 65535 f \n');for(let i=1;i<tot;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
  add('trailer\n<< /Size '+tot+' /Root 1 0 R >>\nstartxref\n'+xo+'\n%%EOF');return new Blob(parts,{type:'application/pdf'})}
 async function printR(id,lh){const w=window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملف...</p>');
@@ -385,7 +426,7 @@ async function shareR(){const{blob,fname,p,v}=RP;const msg=greet()+' يا أفن
  dl(blob,fname);const n=waNum(p.phone);setTimeout(()=>window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank'),600);
  toast('الملف نزل. ارفعه في محادثة واتساب المريض')}
 
-mergeCat();
+mergeCat();applyDefR();
 render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
