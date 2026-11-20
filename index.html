@@ -364,8 +364,13 @@ function drawReport(v,p){const pages=[];let cv,c,y,pg=0;const s=S.settings;const
   sec('Possible Interpretations',R.dx,R.abn?'No specific pattern identified from the abnormal values.':'All reported values are within the reference ranges.');
   if(R.abn)sec('Suggested Follow-up Tests',R.rec,'None.');
   if(y+90>limit)newPage(true);y+=22;wrap('Automated interpretive suggestions to support, not replace, clinical judgment. They are not a diagnosis. Please correlate with the clinical picture and consult your physician.',W-120,18).forEach(l=>{y+=24;L(l,60,y,{s:18,col:'#222',f:SERIF})})}
- if(y>H-330)newPage(true);
- L('Reviewed By :',760,H-270,{b:1,s:24,col:'#222'});L('Dr. Atef Ebid',1010,H-270,{s:24,col:'#222'});c.fillStyle='#999';c.fillRect(760,H-215,W-820,2);L('Signature / Stamp',760,H-188,{s:18,col:'#8a8a8a'});
+ if(y>H-440)newPage(true);
+ L('Reviewed By :',640,H-262,{b:1,s:24,col:'#222'});
+ {const cx=W-250,cy=H-262,B='#1f3fa8';c.save();c.translate(cx,cy);c.rotate(-0.12);c.globalAlpha=.88;c.strokeStyle=B;c.fillStyle=B;
+  c.lineWidth=7;c.beginPath();c.arc(0,0,98,0,7);c.stroke();c.lineWidth=2.5;c.beginPath();c.arc(0,0,88,0,7);c.stroke();c.lineWidth=2;c.beginPath();c.arc(0,0,50,0,7);c.stroke();
+  c.textAlign='center';c.direction='ltr';c.font='bold 17px '+FONT;c.fillText('AL-FARID LAB.',0,-60);c.font='15px '+FONT;c.fillText('MEDICAL CHEMICAL LAB',0,72);
+  c.direction='rtl';c.font='bold 30px '+FONT;c.fillText('المعمل',0,-6);c.fillText('الفريد',0,26);c.restore()
+  c.save();c.fillStyle='#d11a1a';c.textAlign='center';c.direction='ltr';c.font='italic bold 46px "Brush Script MT","Segoe Script","Lucida Handwriting",cursive';c.translate(cx,cy+142);c.rotate(-0.05);c.fillText('Dr. Atef Ebid',0,0);c.strokeStyle='#d11a1a';c.lineWidth=3;c.beginPath();c.moveTo(-120,14);c.quadraticCurveTo(0,4,125,16);c.stroke();c.restore()}
  const now=new Date(),tm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  pages.forEach((cv,i)=>{c=cv.getContext('2d');c.fillStyle='#d9d9d9';c.fillRect(60,H-105,W-120,2);
   L('Page '+(i+1)+' of '+pages.length,60,H-68,{s:21,col:'#555'});L('Printed by: System',W/2-90,H-68,{s:21,col:'#555'});txt('Printed on '+tm+'  '+fd(today()),W-60,H-68,{s:21,col:'#555',a:'right',d:'ltr'});
