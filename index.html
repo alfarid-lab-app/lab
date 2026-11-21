@@ -286,14 +286,14 @@ function lblForm(id){$('modal').innerHTML=`<div class="modal" onclick="if(event.
  <div class="card" style="background:#fff3cd;color:#6b5300">⚠ نوع الأنبوبة على الملصق تخمين تلقائي (من نوع العينة المسجل أو اسم التحليل). راجعه على العينة الحقيقية قبل ما تستخدم الملصق.</div><label class="chk"><input type="checkbox" id="lck"><span>راجعت أنواع الأنابيب</span></label><label>عدد النسخ لكل أنبوبة</label><input id="lcn" type="number" min="1" max="10" value="1">
  <div class="row" style="margin-top:12px"><button class="btn grow" onclick="lblGo('${id}',0)">طابعة ملصقات 50×30 مم</button><button class="btn s grow" onclick="lblGo('${id}',1)">ورقة A4 (ملصقات متعددة)</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`}
 async function lblGo(id,a4){if(!$('lck').checked){toast('أكد إنك راجعت أنواع الأنابيب');return}const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);const n=Math.max(1,Math.min(10,+$('lcn').value||1));
- const w=window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملصقات...</p>');
+ const w=IOS?null:window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملصقات...</p>');
  const L=tubeLabels(v,p),all=[];L.forEach(l=>{for(let i=0;i<n;i++)all.push(l)});let pages,blob;
  if(!a4){pages=all;blob=await makePDF(pages,141.73,85.04)}
  else{pages=[];const cw=Math.round(66*W/210),ch=Math.round(cw*0.6),cols=3,rows=Math.floor((H-60)/ch);const per=cols*rows;
   for(let k=0;k<all.length;k+=per){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,W,H);
    all.slice(k,k+per).forEach((l,i)=>c.drawImage(l,Math.round((W-cols*cw)/2)+(i%cols)*cw,30+Math.floor(i/cols)*ch,cw-6,ch-6));pages.push(cv)}
   blob=await makePDF(pages)}
- const url=URL.createObjectURL(blob);closeM();if(w){w.location.href=url;toast(a4?'اطبع A4 بحجم فعلي 100%':'اطبع بحجم الملصق 50×30 وحجم فعلي 100%')}else dl(blob,'labels.pdf')}
+ const url=URL.createObjectURL(blob);closeM();if(w){w.location.href=url;toast(a4?'اطبع A4 بحجم فعلي 100%':'اطبع بحجم الملصق 50×30 وحجم فعلي 100%')}else pdfOut(blob,'labels.pdf')}
 
 /* ============ الإعدادات والنسخ الاحتياطي ============ */
 function vSettings(){const s=S.settings;
@@ -307,7 +307,9 @@ function vSettings(){const s=S.settings;
  <div class="muted" style="margin-top:10px">${S.patients.length} مريض - ${S.visits.length} زيارة - ${S.tests.length} تحليل</div></div>
  <div class="card"><button class="btn d sm" onclick="rst()">إرجاع قائمة التحاليل للوضع الأصلي</button></div>`}
 function sSave(){Object.assign(S.settings,{name:$('s1').value,phone:$('s2').value,hours:$('s3').value,owner:$('s4').value,footer:$('s5').value,lhTop:Math.max(0,+$('s6').value||50),lhBot:Math.max(0,+$('s7').value||25)});save();toast('تم الحفظ')}
-function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},1500)}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},90000)}
+const IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function pdfOut(blob,name){const u=URL.createObjectURL(blob);window._pf=new File([blob],name,{type:'application/pdf'});$('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>الملف جاهز</h2><div class="row"><a class="btn w grow" href="${u}" target="_blank" style="text-align:center;text-decoration:none">📄 افتح الملف للطباعة</a></div><div class="row" style="margin-top:8px"><button class="btn s grow" onclick="navigator.share&&navigator.share({files:[window._pf]}).catch(()=>{})">مشاركة / حفظ</button><button class="btn s" onclick="closeM()">إغلاق</button></div><div class="muted" style="margin-top:8px">اطبع بورق A4 وحجم فعلي 100%</div></div></div>`}
 function exp(){dl(new Blob([JSON.stringify(S)],{type:'application/json'}),'alfarid-backup-'+today()+'.json');toast('تم تنزيل النسخة')}
 let mrg=0;
 function merge(d){const add=(k)=>{const ids=new Set(S[k].map(x=>x.id));d[k].forEach(x=>{if(!ids.has(x.id))S[k].push(x)})};add('patients');add('visits');add('tests');S.seq=Math.max(S.seq||0,d.seq||0)}
@@ -418,10 +420,10 @@ async function makePDF(pages,PW,PH){PW=PW||595.28;PH=PH||841.89;const enc=new Te
   o(iid,()=>{add('<< /Type /XObject /Subtype /Image /Width '+pages[k].width+' /Height '+pages[k].height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpgs[k].length+' >>\nstream\n');add(jpgs[k]);add('\nendstream')})});
  const xo=off,tot=3+n*3;add('xref\n0 '+tot+'\n0000000000 65535 f \n');for(let i=1;i<tot;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
  add('trailer\n<< /Size '+tot+' /Root 1 0 R >>\nstartxref\n'+xo+'\n%%EOF');return new Blob(parts,{type:'application/pdf'})}
-async function printR(id,lh,o){const w=window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملف...</p>');
+async function printR(id,lh,o){const w=IOS?null:window.open('','_blank');if(w)w.document.write('<p style="font:20px sans-serif;direction:rtl;padding:20px">جاري تجهيز الملف...</p>');
  await LOGOREADY;const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);toast('بجهّز الطباعة...');
  const pages=drawReport(v,p,lh,o);const blob=await makePDF(pages);const url=URL.createObjectURL(blob);
- if(w){w.location.href=url;toast('اطبع من النافذة الجديدة: ورق A4 وحجم فعلي 100%')}else{dl(blob,'report-'+(lh?'letterhead':'plain')+'.pdf');toast('الملف نزل. افتحه واطبعه: ورق A4 وحجم فعلي 100%')}}
+ if(w){w.location.href=url;toast('اطبع من النافذة الجديدة: ورق A4 وحجم فعلي 100%')}else pdfOut(blob,'report-'+(lh?'letterhead':'plain')+'.pdf')}
 let RP=null;
 async function report(id,o){await LOGOREADY;const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);
  toast('بجهّز التقرير...');const pages=drawReport(v,p,false,o);const blob=await makePDF(pages);const dr=!v.rel||!!(o&&o.draft);
@@ -446,4 +448,4 @@ render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
 </body>
-</html>
+  </html>
