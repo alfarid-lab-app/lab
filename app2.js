@@ -1,3 +1,4 @@
+
 /* ============ تنقل ============ */
 let V={n:'patients'};
 function go(n,p){V={n,...p};render();window.scrollTo(0,0)}
@@ -87,7 +88,7 @@ function rs(){const p=S.patients.find(x=>x.id===D.pid);
  $('rs').innerHTML=D.items.length?D.items.map((i,k)=>`<div class="res ${flag(i,agk(p))?'hi':''}" id="rr${k}"><div><span style="direction:ltr;display:block;text-align:right">${esc(i.name)}</span><span class="muted" style="direction:ltr;display:block;text-align:right">${esc(refText(i,agk(p)))} ${esc(i.unit)}${i.rdef?' <span class="tag" style="background:#fff3cd;color:#8a6d00">⚠ مدى افتراضي - راجعه</span>':''}${i.imp?' <span class="tag" style="background:#e0f2fe;color:#075985">📥 مستورد - راجعه</span>':''}</span></div>
  <input value="${esc(i.value)}" placeholder="النتيجة" ${i.type==='num'?'inputmode="decimal"':''} oninput="D.items[${k}].value=this.value;D.items[${k}].imp=0;document.getElementById('rr${k}').classList.toggle('hi',!!flag(D.items[${k}],'${agk(p)}'))"></div>`).join(''):'<div class="empty">اختار تحاليل من فوق</div>'}
 function newNo(d){const k=String(d||today()).replace(/-/g,'').slice(2);let n=S.visits.filter(x=>x.no&&x.no.startsWith(k)).length+1,c;do{c=k+String(n++).padStart(2,'0')}while(S.visits.some(x=>x.no===c));return c}
-function hv(v){const t=JSON.stringify([v.pid,v.date,v.cm,v.notes||'',v.doc||'',v.items.map(i=>[i.tid,i.name,i.value,i.low,i.high,i.lowF,i.highF,i.normal,i.unit].concat(i.lowN!==undefined||i.highN!==undefined||i.lowI!==undefined||i.highI!==undefined?[i.lowN,i.highN,i.lowI,i.highI]:[]))]);let h=5381;for(let k=0;k<t.length;k++)h=((h<<5)+h+t.charCodeAt(k))|0;return String(h)}
+function hv(v){const t=JSON.stringify([v.pid,v.date,v.cm,v.notes||'',v.doc||'',v.items.map(i=>[i.tid,i.name,i.value,i.low,i.high,i.lowF,i.highF,i.normal,i.unit].concat(i.lowN!==undefined||i.highN!==undefined||i.lowI!==undefined||i.highI!==undefined?[i.lowN,i.highN,i.lowI,i.highI]:[]).concat(i.pr?['pr',i.pr.l,i.pr.h]:[]))]);let h=5381;for(let k=0;k<t.length;k++)h=((h<<5)+h+t.charCodeAt(k))|0;return String(h)}
 function revForm(id){const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);const rd=v.items.filter(i=>i.rdef);
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>راجع واعتمد التقرير</h2><div class="muted">التعليقات والمدى الافتراضي مسودات. بعد الاعتماد التقرير بيتجمّد (ما يتغيرش لو المكتبة اتحدثت)، ويطلع بالختم والتوقيع وتقدر تبعته على واتساب. أي تعديل بعد كده بيلغي الاعتماد.</div>
  <label>التعليقات (عدّلها لو لازم، وده النص اللي هيتجمّد)</label><textarea id="rvc" rows="8" style="direction:ltr;text-align:left">${esc(v.cm!==undefined?v.cm:autoCm(v.items))}</textarea>
@@ -333,7 +334,7 @@ function applyNeo2(){}
 
 /* ===== صورة التقرير الخارجي + استيراد النتائج (مسودة، المراجعة إجبارية) ===== */
 function phr(){const e=$('phc');if(!e)return;D.ph=D.ph||[];
- e.innerHTML=`<div class="row" style="gap:6px"><label class="btn s sm" style="margin:0;cursor:pointer">📷 تصوير التقرير الخارجي<input type="file" accept="image/*" capture="environment" style="display:none" onchange="phAdd(this)"></label><button type="button" class="btn s sm" onclick="impForm()">📥 استيراد نتائج</button></div>
+ e.innerHTML=`<div class="row" style="gap:6px"><label class="btn s sm" style="margin:0;cursor:pointer">📷 تصوير التقرير الخارجي<input type="file" accept="image/*" capture="environment" style="display:none" onchange="phAdd(this)"></label><label class="btn sm" style="margin:0;cursor:pointer;background:#0f766e;color:#fff">🔍 قراءة CBC من الصورة<input type="file" accept="image/*" capture="environment" style="display:none" onchange="cbcPick(this)"></label><button type="button" class="btn s sm" onclick="impForm()">📥 استيراد نتائج</button></div>
  <div class="muted" style="font-size:12px;margin-top:4px">غطّي اسم المريض قبل التصوير. الصورة بتتحفظ مع الزيارة ومش بتدخل في التقرير. النتائج المستوردة بتظهر للمراجعة ومفيش اعتماد تلقائي.</div>
  ${D.ph.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+D.ph.map((x,k)=>`<div style="text-align:center"><img src="${x}" style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ccc" onclick="phView(${k})"><div><button type="button" class="btn s sm" onclick="phShare(${k})">واتساب</button> <button type="button" class="btn s sm" onclick="D.ph.splice(${k},1);phr()">🗑</button></div></div>`).join('')+'</div>':''}`}
 function phAdd(inp){const f=inp.files&&inp.files[0];if(!f)return;if((D.ph||[]).length>=4){toast('الحد الأقصى ٤ صور للزيارة');return}
@@ -353,6 +354,93 @@ function impPrev(){IMP=impParse($('impt').value);if(!IMP.length){toast('مفيش
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>راجع قبل الإدخال</h2><table style="width:100%;font-size:13px;direction:ltr"><tr><th>Name</th><th>Value</th><th>Unit</th><th>الحالة</th></tr>${IMP.map((r,k)=>`<tr><td>${esc(r.k)}</td><td>${esc(r.v)}</td><td>${esc(r.u)}</td><td style="direction:rtl">${r.bad?'⚠ سطر مش مفهوم، هيتجاهل':r.m.it?'يملا: '+esc(r.m.it.name)+(String(r.m.it.value||'')!==''?' (كان '+esc(r.m.it.value)+')':''):r.m.t?'يضاف: '+esc(r.m.t.name):'تحليل جديد (من غير مدى مرجعي)'}</td></tr>`).join('')}</table><div class="muted" style="font-size:12px;margin:6px 0">التحاليل الجديدة بتتضاف للكتالوج من غير مدى مرجعي (مش بنخمّن مدى). النتائج بتتعلّم "مستورد - راجعه".</div><div class="row"><button class="btn grow" onclick="impDo()">تأكيد وإدخال</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`}
 function impDo(){let n=0;IMP.forEach(r=>{if(r.bad||r.v==='')return;let it=r.m.it;if(!it){let t=r.m.t;if(!t){t={id:uid('i'),cat:'cbc',name:r.k,type:'num',unit:r.u,low:'',high:'',lowF:'',highF:'',normal:'',price:0};S.tests.push(t)}tog(t.id,true);it=D.items.find(x=>x.tid===t.id)}
   if(!it)return;it.value=r.v;it.imp=1;n++});save();closeM();rs();tot();toast('اتدخلت '+n+' نتيجة. راجعها قبل الحفظ والاعتماد')}
+
+/* ===== قراءة تقرير جهاز CBC من صورة (على الجهاز بالكامل، مسودة، المراجعة إجبارية) ===== */
+const CBCT=[['WBC','Total WBCs','10^9/L',2],['Lym#','Lym#','10^9/L',2],['Mid#','Mid#','10^9/L',2],['Gran#','Gran#','10^9/L',2],['Lym%','Lym%','%',1],['Mid%','Mid%','%',1],['Gran%','Gran%','%',1],['RBC','RBC','10^12/L',2],['HGB','Hb (Haemoglobin)','g/dL',1],['HCT','Ht (Haematocrit)','%',1],['MCV','MCV','fL',1],['MCH','MCH','pg',1],['MCHC','MCHC','g/dL',1],['RDW-CV','RDW-CV','%',1],['RDW-SD','RDW-SD','fL',1],['PLT','Platelets','10^9/L',0],['MPV','MPV','fL',1],['PDW','PDW','',1],['PCT','PCT','mL/L',2],['P-LCC','P-LCC','10^9/L',0],['P-LCR','P-LCR','%',1]];
+function lev(a,b){const m=a.length,n=b.length,d=[];for(let i=0;i<=m;i++){d[i]=[i];}for(let j=1;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n]}
+function cbcDec(tok,dec){
+ let t=String(tok||'').replace(/[Oo]/g,'0').replace(/[lI|]/g,'1').replace(/,/g,'.').replace(/[^0-9.]/g,'');if(!t)return null;
+ if(t.split('.').length>2)return null;
+ if(t.includes('.')){const p=t.split('.');if(p[1].length===dec&&p[0]!==''&&p[0].length<=3)return{v:t,fix:0};t=p.join('')}
+ if(dec===0)return{v:String(parseInt(t,10)),fix:0};
+ t=t.padStart(dec+1,'0');if(t.length>dec+3)return null;return{v:t.slice(0,t.length-dec)+'.'+t.slice(t.length-dec),fix:1}}
+function cbcMatch(name,last,hint){const q=String(name||'').toLowerCase().replace(/[^a-z0-9#%\-]/g,'');if(!q)return-1;let best=-1,bd=9;
+ CBCT.forEach((r,i)=>{if(i<=last)return;const b=r[0].toLowerCase();let d=lev(q,b);if(b.endsWith('#')){d=Math.min(d,lev(q,b.slice(0,-1)),lev(q.slice(0,-1),b.slice(0,-1)))}
+  if(hint===i+1)d=Math.max(0,d-1);if(i-last>3)d+=2;if(d<bd){bd=d;best=i}});
+ return bd<=2?best:-1}
+function cbcLine(r,rest){r.v='';r.l='';r.h='';r.fl='';r.w=[];
+  const all=[...rest.matchAll(/([0-9][0-9.]*)\s*[-–—]\s*([0-9][0-9.]*)/g)];const rg=all.length?all[all.length-1]:null;
+  let head=rg?rest.slice(0,rg.index):rest;
+  const fl=head.match(/(?:^|\s)([HL])(?=\s|[0-9])/);if(fl)r.fl=fl[1];
+  const vm=head.replace(/(?:^|\s)[HL](?=\s|[0-9])/,' ').match(/(?:^|\s)([0-9][0-9.,]*)/);
+  if(vm){const x=cbcDec(vm[1],r.dec);if(x){r.v=x.v;if(x.fix)r.w.push('النقطة العشرية اتحطت حسب تنسيق الجهاز')}}
+  if(rg){const a=cbcDec(rg[1],r.dec),b=cbcDec(rg[2],r.dec);if(a&&b){r.l=a.v;r.h=b.v;if(a.fix||b.fix)r.w.push('نقطة المدى اتحطت حسب تنسيق الجهاز');if(+a.v>=+b.v){r.l='';r.h='';r.w.push('المدى مش منطقي')}}}
+  if(!r.v)r.w.push('القيمة مش مقروءة');if(!r.l&&!r.h)r.w.push('المدى مش مقروء');
+  if(r.v&&r.l&&r.h){const x=+r.v,lo=+r.l,hi=+r.h;if(x>hi*6||x<lo/6)r.w.push('القيمة بعيدة جدًا عن المدى، اتأكد');const f=x<lo?'L':x>hi?'H':'';if(f!==r.fl)r.w.push(r.fl?'العلامة H/L المقروءة مختلفة عن الحساب':'العلامة H/L مش مقروءة، الحساب: '+f)}
+  r.st=!r.v||(!r.l&&!r.h)?'bad':r.w.some(x=>/بعيدة|مختلفة|منطقي/.test(x))?'bad':r.w.length?'warn':'ok'}
+function cbcClean(t){return String(t||'').replace(/[|\[\]{}_~=]/g,' ').replace(/\s+/g,' ').trim()}
+function cbcParse(lines){let on=!lines.some(l=>/para.{0,40}(result|unit|ref)/i.test(l.text||''));const rows=CBCT.map((r,i)=>({n:r[0],tn:r[1],u:r[2],dec:r[3],v:'',l:'',h:'',fl:'',st:'miss',w:[],y:null}));let last=-1;
+ lines.forEach(line=>{if(!on){if(/para.{0,40}(result|unit|ref)/i.test(line.text||''))on=true;return}const s=cbcClean(line.text);if(!s)return;
+  const m=s.match(/^(\d{1,2})?\s*([A-Za-z][A-Za-z0-9#%\-]*)\s*(.*)$/);if(!m)return;const hint=m[1]?parseInt(m[1],10):0;
+  const i=cbcMatch(m[2],last,hint);if(i<0)return;last=i;const r=rows[i];r.y=line.bbox?[line.bbox.y0,line.bbox.y1]:null;r.raw=s;cbcLine(r,m[3])});
+ /* fill missing y by linear fit */
+ const pts=rows.map((r,i)=>r.y?[i,(r.y[0]+r.y[1])/2,r.y[1]-r.y[0]]:null).filter(Boolean);
+ if(pts.length>=3){const n=pts.length,sx=pts.reduce((a,p)=>a+p[0],0),sy=pts.reduce((a,p)=>a+p[1],0),sxx=pts.reduce((a,p)=>a+p[0]*p[0],0),sxy=pts.reduce((a,p)=>a+p[0]*p[1],0);const b=(n*sxy-sx*sy)/(n*sxx-sx*sx),a=(sy-b*sx)/n,h=pts.reduce((q,p)=>q+p[2],0)/n;
+  rows.forEach((r,i)=>{r.yc=a+b*i;r.hh=Math.max(h,Math.abs(b)*0.9)})}
+ return rows}
+
+function cbcCombine(sets,base){const N=sets.length;const mode=a=>{const c={};a.forEach(x=>{if(x!=='')c[x]=(c[x]||0)+1});let b='',n=0;Object.keys(c).forEach(k=>{if(c[k]>n){n=c[k];b=k}});return[b,n,Object.keys(c).length]};
+ return base.map((r0,i)=>{const r={...r0,w:[]};let agree=true,note=[];
+  let soft=false;['v','l','h','fl'].forEach(f=>{const a=sets.map(s=>s[i][f]);const[b,n,k]=mode(a);r[f]=b;if(f==='fl')return;if(n>=2&&k>1){soft=true;note.push('قراءة مختلفة في '+(f==='v'?'القيمة':f==='l'?'أول المدى':'آخر المدى')+': '+[...new Set(a.filter(x=>x!==''))].join(' / '))}if(n<2){agree=false;note.push((f==='v'?'القيمة':f==='l'?'أول المدى':'آخر المدى')+': القراءات مختلفة ('+[...new Set(a.filter(x=>x!==''))].join(' / ')+')')}});
+  if(!r.v||(!r.l&&!r.h)){r.st=!r.v?'miss':'bad'}
+  else{const x=+r.v,lo=+r.l,hi=+r.h;let w=[];if(+r.l>=+r.h)w.push('المدى مش منطقي');if(x>hi*6||x<lo/6)w.push('القيمة بعيدة جدًا عن المدى');const f=x<lo?'L':x>hi?'H':'';if(f!==r.fl)w.push(r.fl?'العلامة H/L المقروءة مختلفة عن الحساب':'العلامة H/L مش مقروءة، الحساب: '+(f||'طبيعي'));
+   const fixed=sets.some(s=>s[i].w.some(z=>/العشرية|نقطة/.test(z)));
+   r.w=note.concat(w);r.st=(!agree||w.some(z=>/منطقي|بعيدة|مختلفة/.test(z)))?'bad':(r.w.length||fixed||soft)?'warn':'ok';if(fixed&&agree)r.w.push('النقطة العشرية اتحطت حسب تنسيق الجهاز')}
+  return r})}
+
+const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+let CW=null,CBCR=[];
+function loadTess(){return new Promise((ok,no)=>{if(window.Tesseract)return ok();const s=document.createElement('script');s.src=window.TESS_SRC_OVERRIDE||TESS_SRC;s.onload=ok;s.onerror=()=>no(new Error('load'));document.head.appendChild(s)})}
+function cbcGray(src,sx,sy,sw,sh,scale,st){const c=document.createElement('canvas');c.width=Math.round(sw*scale);c.height=Math.round(sh*scale);const x=c.getContext('2d');x.drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height);
+ const d=x.getImageData(0,0,c.width,c.height),a=d.data,h=new Uint32Array(256);for(let i=0;i<a.length;i+=4){const g=(a[i]*0.3+a[i+1]*0.59+a[i+2]*0.11)|0;a[i]=g;h[g]++}
+ if(!st){for(let i=0;i<a.length;i+=4){a[i+1]=a[i+2]=a[i]}x.putImageData(d,0,0);return c}const n=c.width*c.height;let lo=0,hi=255,s=0;for(let i=0;i<256;i++){s+=h[i];if(s>n*0.01){lo=i;break}}s=0;for(let i=255;i>=0;i--){s+=h[i];if(s>n*0.2){hi=i;break}}if(hi-lo<30){lo=0;hi=255}
+ for(let i=0;i<a.length;i+=4){let g=(a[i]-lo)*255/(hi-lo);g=g<0?0:g>255?255:g;a[i]=a[i+1]=a[i+2]=g;a[i+3]=255}x.putImageData(d,0,0);return c}
+function cbcMsg(t){const e=$('cbcm');if(e)e.textContent=t}
+async function cbcPick(inp){const f=inp.files&&inp.files[0];if(!f)return;inp.value='';
+ $('modal').innerHTML=`<div class="modal"><div><h2>قراءة التقرير</h2><div id="cbcm" class="muted">جارِ تحميل الصورة...</div></div></div>`;
+ try{
+  const im=await new Promise((ok,no)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=u});
+  const W=im.naturalWidth,H=im.naturalHeight;
+  const CS=window.CBC_S||{};const cv=cbcGray(im,0,0,W,H,Math.min(1,1600/W)*(CS.up||1),CS.st1);
+  const pc=document.createElement('canvas');const ps=Math.min(1,1400/Math.max(W,H));pc.width=Math.round(W*ps);pc.height=Math.round(H*ps);pc.getContext('2d').drawImage(im,0,0,pc.width,pc.height);
+  D.ph=D.ph||[];if(D.ph.length<4)D.ph.push(pc.toDataURL('image/jpeg',.6));
+  cbcMsg('جارِ تحميل مكتبة القراءة (أول مرة بس، محتاجة نت)...');await loadTess();
+  if(!CW){CW=await Tesseract.createWorker('eng',1,{logger:m=>{if(m.status==='recognizing text')cbcMsg('جارِ القراءة... '+Math.round(m.progress*100)+'%');else if(m.status&&m.status.includes('load'))cbcMsg('جارِ تحميل بيانات اللغة...')},...(window.TESS_OPTS||{})})}
+  const rank={ok:0,warn:1,bad:2,miss:3};
+  const PASSES=(window.CBC_S&&window.CBC_S.passes)||[[0,0,6],[0,0,4],[0,0,3]];const sets=[];let rows=null;
+  for(let pi=0;pi<PASSES.length;pi++){cbcMsg('قراءة '+(pi+1)+' من '+PASSES.length+' ...');await CW.setParameters({tessedit_pageseg_mode:String(PASSES[pi][2]||6),preserve_interword_spaces:'1'});
+   const cc=PASSES[pi][0]===0?im:cbcGray(im,0,0,W,H,Math.min(1,1600/W)*PASSES[pi][0],PASSES[pi][1]);const c1=PASSES[pi][0]===0?im:await new Promise(rs=>cc.toBlob(rs,'image/png'));c1.width=cc.width;
+   const r=await CW.recognize(c1,{},{blocks:true});const lines=r.data.lines||(r.data.blocks||[]).flatMap(b=>b.paragraphs.flatMap(p=>p.lines));
+   (window.CBC_LINES=window.CBC_LINES||[]).push(lines.map(l=>l.text));const rs=cbcParse(lines.map(l=>({text:l.text,bbox:l.bbox})));const k=(PASSES[pi][0]===0?im.naturalWidth:c1.width)/cv.width;rs.forEach(x=>{if(x.yc!==undefined){x.yc/=k;x.hh/=k}});sets.push(rs);if(!rows)rows=rs}
+  window.CBC_SETS=sets;rows=cbcCombine(sets,rows);
+  await CW.setParameters({tessedit_pageseg_mode:'7'});
+  for(let i=0;i<rows.length;i++){const w=rows[i];if(w.v!==''||w.yc===undefined)continue;cbcMsg('إعادة قراءة السطر '+(i+1)+' ...');
+   const y0=Math.max(0,w.yc-w.hh*0.9),hh=Math.min(cv.height-y0,w.hh*1.8);const bc=cbcGray(cv,0,y0,cv.width,hh,2,0);
+   const rr=await CW.recognize(bc);const s=cbcClean(rr.data.text);const m=s.match(/^(\d{1,2})?\s*([A-Za-z][A-Za-z0-9#%\-]*)\s*(.*)$/);if(!m)continue;
+   const t={...w,w:[]};cbcLine(t,m[3]);if(t.v){Object.assign(w,{v:t.v,l:t.l||w.l,h:t.h||w.h,fl:t.fl,w:t.w.concat(['قراءة واحدة بس، راجع']),st:'bad',raw:s})}}
+  rows.forEach(w=>{if(w.yc!==undefined){const y0=Math.max(0,w.yc-w.hh*0.9),hh=Math.min(cv.height-y0,w.hh*1.5),sw=cv.width*0.8,c2=document.createElement('canvas'),k=Math.min(1,800/sw);c2.width=Math.round(sw*k);c2.height=Math.round(hh*k);c2.getContext('2d').drawImage(cv,0,y0+w.hh*0.1,sw,hh,0,0,c2.width,c2.height);w.img=c2.toDataURL('image/jpeg',.7)}});
+  CBCR=rows;phr();cbcRev()
+ }catch(e){closeM();toast(String(e&&e.message)==='load'?'مكتبة القراءة محتاجة نت أول مرة. اتأكد من الاتصال':'تعذرت القراءة. جرب صورة أوضح');console.log(e)}}
+function cbcRev(){const bad=CBCR.filter(r=>r.st!=='ok').length;const col={ok:'#16a34a',warn:'#d97706',bad:'#dc2626',miss:'#dc2626'};
+ $('modal').innerHTML=`<div class="modal" style="align-items:flex-start;overflow:auto"><div style="max-width:100%"><h2>راجع كل صف مع الصورة</h2><div class="muted" style="font-size:12px">القراءة الآلية ممكن تغلط. كل صف بيظهر معاه جزء الصورة. عدّل أي رقم غلط. المدى المطبوع بيتحفظ للزيارة دي بس. مفيش اعتماد تلقائي. ${bad?'<b style="color:#b45309">'+bad+' صف محتاج مراجعة (ملوّن).</b>':''}</div>
+ ${CBCR.map((r,k)=>`<div style="border:2px solid ${col[r.st]};border-radius:8px;padding:6px;margin:6px 0"><div style="display:flex;justify-content:space-between;direction:ltr"><b>${r.n}</b><span style="font-size:11px;color:${col[r.st]}">${r.st==='ok'?'✓ مقروء':r.st==='warn'?'⚠ راجع':r.st==='bad'?'✖ راجع':'✖ مش مقروء'}</span></div>${r.img?`<img src="${r.img}" style="width:100%;border-radius:4px;margin:3px 0">`:''}
+ <div style="direction:ltr;display:grid;grid-template-columns:1.2fr 1fr .8fr .8fr .5fr;gap:4px;font-size:11px"><span>Result</span><span>Unit</span><span>Low</span><span>High</span><span>H/L</span>
+ <input value="${esc(r.v)}" inputmode="decimal" oninput="CBCR[${k}].v=this.value;CBCR[${k}].ed=1" style="width:100%"><input value="${esc(r.u)}" oninput="CBCR[${k}].u=this.value" style="width:100%"><input value="${esc(r.l)}" inputmode="decimal" oninput="CBCR[${k}].l=this.value" style="width:100%"><input value="${esc(r.h)}" inputmode="decimal" oninput="CBCR[${k}].h=this.value" style="width:100%"><input value="${esc(r.fl)}" oninput="CBCR[${k}].fl=this.value" style="width:100%"></div>
+ ${r.w.length?'<div style="font-size:11px;color:#b45309;margin-top:3px">'+r.w.map(esc).join(' • ')+'</div>':''}</div>`).join('')}
+ <div class="row" style="position:sticky;bottom:0;background:#fff;padding:6px 0"><button class="btn grow" onclick="cbcDo()">تأكيد وإدخال</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`}
+function cbcDo(){let n=0;CBCR.forEach(r=>{if(String(r.v).trim()==='')return;let t=S.tests.find(x=>String(x.name).toLowerCase()===r.tn.toLowerCase());if(!t){t={id:uid('i'),cat:'cbc',name:r.tn,type:'num',unit:r.u,low:'',high:'',lowF:'',highF:'',normal:'',price:0};S.tests.push(t)}
+  if(!D.items.some(i=>i.tid===t.id))tog(t.id,true);const it=D.items.find(i=>i.tid===t.id);if(!it)return;it.value=String(r.v).trim();it.unit=r.u;it.pr={l:String(r.l).trim(),h:String(r.h).trim(),f:r.fl};it.imp=1;n++});
+ save();closeM();rs();tot();toast('اتدخلت '+n+' نتيجة بمداها المطبوع. راجعها قبل الحفظ والاعتماد')}
 function refreshVisit(id){const v=S.visits.find(x=>x.id===id);if(!v)return;applyNeo(true);if(v.rel&&!confirm('الزيارة معتمدة. تحديث نطاقات الأطفال هيلغي الاعتماد ولازم تراجع وتعتمد التقرير تاني. تكمل؟'))return;let c=0;(v.items||[]).forEach(i=>{if(i.type==='txt')return;const t=S.tests.find(x=>x.id===i.tid)||S.tests.find(x=>nk(x.name)===nk(i.name));if(!t)return;['lowN','highN','lowI','highI'].forEach(k=>{if(!em(t[k])&&em(i[k])){i[k]=t[k];c++}})});if(c&&v.rel)delete v.rel;save();toast(c?'اتحدثت النطاقات. راجع واعتمد التقرير تاني':'مفيش نطاقات أطفال ناقصة');render()}
 function refreshNeo(){const c=applyNeo(true);alert('تم تحديث نطاقات الأطفال: '+c+' عنصر (الزيارات المعتمدة لا تتغير)');render()}
 mergeCat();applyDefR();applyNeo();applyNeo2();
