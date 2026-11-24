@@ -57,7 +57,7 @@ details{margin-bottom:6px}summary{padding:9px;background:var(--tl);border-radius
 </head>
 <body>
 <header><h1>المعمل الفريد<small>للتحاليل الطبية الكيميائية</small></h1><button class="btn s sm" id="hb" style="display:none" onclick="go('patients')">الرئيسية</button></header>
-<nav id="nav"></nav>
+<div style="background:#fff3cd;color:#6b5300;text-align:center;padding:6px 8px;font-size:14px;font-weight:bold">نسخة تجريبية على الموبايل: بيانات وهمية بس. البيانات هنا على الجهاز ده فقط ومش متزامنة مع الكمبيوتر</div><nav id="nav"></nav>
 <main id="app"></main>
 <div id="modal"></div>
 
@@ -114,12 +114,22 @@ const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const fd=d=>{const [y,m,dd]=(d||'').split('-');return dd?dd+'/'+m+'/'+y:''};
 const gl=g=>g==='F'?'أنثى':g==='M'?'ذكر':'';
+const AUN={y:'سنة',m:'شهر',d:'يوم'};
+function hasAge(p){return p.age!==''&&p.age!=null&&!isNaN(parseFloat(p.age))}
+function ageTxt(p){return hasAge(p)?p.age+' '+AUN[p.au||'y']:''}
+function ageEn(p){if(!hasAge(p))return '';const n=+p.age,u=p.au||'y';return p.age+' '+(u==='d'?'Day':u==='m'?'Month':'Year')+(n===1?'':'s')}
+function ageSh(p){return hasAge(p)?p.age+({y:'Y',m:'Mo',d:'D'}[p.au||'y']):''}
+function ageDays(p){if(!hasAge(p))return null;const n=+p.age,u=p.au||'y';return u==='d'?n:u==='m'?n*30.4:n*365.25}
+function grp(p){const d=ageDays(p);if(d===null)return '';return d<6?'Z':d<=30?'N':d<365?'I':''}
+function agk(p){const r=grp(p);return (p.gender||'')+(r?':'+r:'')}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
 function waNum(p){p=String(p||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g,'');if(p.startsWith('00'))p=p.slice(2);if(p.startsWith('20')&&p.length>=12)return p;if(p.startsWith('0'))return '20'+p.slice(1);if(p.length===10&&p[0]==='1')return '20'+p;return p}
 
 /* ============ مرجع النتائج ============ */
-function range(it,g){let l=it.low,h=it.high;if(g==='F'&&(it.lowF!==''||it.highF!=='')){l=it.lowF;h=it.highF}return[l,h]}
-function refText(it,g){if(it.type==='txt')return it.normal||'';const[l,h]=range(it,g);if(l===''&&h==='')return it.refNote||'';if(l===''||l===null)return '< '+h;if(h===''||h===null)return '> '+l;if(+l===0&&+h>0)return '< '+h;return l+' - '+h}
+function range(it,g){g=String(g||'');const q=g.split(':'),gd=q[0],gr=q[1]||'';
+ if(gr==='Z')return['',''];if(gr==='N')return[it.lowN??'',it.highN??''];if(gr==='I')return[it.lowI??'',it.highI??''];
+ let l=it.low,h=it.high;if(gd==='F'&&(it.lowF!==''||it.highF!=='')){l=it.lowF;h=it.highF}return[l,h]}
+function refText(it,g){if(it.type==='txt')return it.normal||'';const[l,h]=range(it,g);if(String(g).includes(':')&&l===''&&h==='')return 'N/A (age)*';if(l===''&&h==='')return it.refNote||'';if(l===''||l===null)return '< '+h;if(h===''||h===null)return '> '+l;if(+l===0&&+h>0)return '< '+h;return l+' - '+h}
 function flag(it,g){const v=String(it.value??'').trim();if(!v)return '';
  if(it.type==='txt'){if(!it.normal)return '';return v.toLowerCase()===it.normal.toLowerCase()?'':'*'}
  const x=parseFloat(v.replace(',','.'));if(isNaN(x))return '';const[l,h]=range(it,g);
@@ -149,31 +159,32 @@ function listP(){const q0=($('q')?.value||'').trim(),q=q0.toLowerCase();const ph
  a.sort((x,y)=>(last(y)||y.created).localeCompare(last(x)||x.created));
  $('cnt').textContent=S.patients.length+' مريض'+(q?' - النتيجة: '+a.length:'');
  $('pl').innerHTML=a.length?a.map(p=>{const n=S.visits.filter(v=>v.pid===p.id).length;
- return `<div class="card item" onclick="go('patient',{id:'${p.id}'})"><div><b>${esc(p.name)}</b><span class="muted">${esc(p.phone||'بدون رقم')} ${p.age?' - '+esc(p.age)+' سنة':''} ${gl(p.gender)?' - '+gl(p.gender):''}</span></div><span class="tag">${n} زيارة</span></div>`}).join(''):`<div class="empty">${S.patients.length?'مفيش نتائج':'لسه مفيش مرضى. دوس "مريض جديد" وابدأ.'}${ph&&qk.length>=9?`<br><button class="btn" style="margin-top:10px" onclick="pForm('','${esc(q0)}')">+ مريض جديد بالرقم ${esc(q0)}</button>`:''}</div>`}
+ return `<div class="card item" onclick="go('patient',{id:'${p.id}'})"><div><b>${esc(p.name)}</b><span class="muted">${esc(p.phone||'بدون رقم')} ${hasAge(p)?' - '+esc(ageTxt(p)):''} ${gl(p.gender)?' - '+gl(p.gender):''}</span></div><span class="tag">${n} زيارة</span></div>`}).join(''):`<div class="empty">${S.patients.length?'مفيش نتائج':'لسه مفيش مرضى. دوس "مريض جديد" وابدأ.'}${ph&&qk.length>=9?`<br><button class="btn" style="margin-top:10px" onclick="pForm('','${esc(q0)}')">+ مريض جديد بالرقم ${esc(q0)}</button>`:''}</div>`}
 function pEnter(){const e=LQ.find(v=>v.no===dg($('q').value));if(e)return go('view',{id:e.id});const r=document.querySelectorAll('#pl .item');if(r.length===1)r[0].click()}
 function pForm(id,ph){const p=S.patients.find(x=>x.id===id)||{phone:ph||''};
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>${id?'تعديل بيانات المريض':'مريض جديد'}</h2>
  <label>الاسم *</label><input id="fn" value="${esc(p.name||'')}">
  <label>رقم التليفون (واتساب)</label><input id="fp" type="tel" inputmode="tel" value="${esc(p.phone||'')}" placeholder="01xxxxxxxxx">
- <div class="row"><div class="grow"><label>السن</label><input id="fa" type="number" inputmode="numeric" value="${esc(p.age||'')}"></div>
+ <div class="row"><div class="grow"><label>السن</label><input id="fa" type="number" inputmode="decimal" min="0" step="any" value="${esc(p.age??'')}"></div>
+ <div class="grow"><label>الوحدة</label><select id="fau"><option value="y" ${(p.au||'y')==='y'?'selected':''}>سنة</option><option value="m" ${p.au==='m'?'selected':''}>شهر</option><option value="d" ${p.au==='d'?'selected':''}>يوم</option></select></div>
  <div class="grow"><label>النوع</label><select id="fg"><option value="M" ${p.gender!=='F'?'selected':''}>ذكر</option><option value="F" ${p.gender==='F'?'selected':''}>أنثى</option></select></div></div>
  <label>ملاحظات</label><input id="fno" value="${esc(p.note||'')}">
  <div class="row" style="margin-top:14px"><button class="btn grow" onclick="pSave('${id||''}')">حفظ</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`;$('fn').focus()}
 function closeM(){$('modal').innerHTML=''}
 function pSave(id){const name=$('fn').value.trim();if(!name){toast('اكتب الاسم');return}
- const d={name,phone:$('fp').value.trim(),age:$('fa').value.trim(),gender:$('fg').value,note:$('fno').value.trim()};
+ const d={name,phone:$('fp').value.trim(),age:$('fa').value.trim(),au:$('fau').value,gender:$('fg').value,note:$('fno').value.trim()};
  if(id)Object.assign(S.patients.find(x=>x.id===id),d);else{d.id=uid('p');d.created=today();S.patients.push(d);id=d.id}
  save();closeM();go('patient',{id})}
 function vPatient(){const p=S.patients.find(x=>x.id===V.id);if(!p)return go('patients');
  const vs=S.visits.filter(v=>v.pid===p.id).sort((a,b)=>b.date.localeCompare(a.date));
  $('app').innerHTML=`<div class="card"><h2 style="margin-top:0">${esc(p.name)}</h2>
- <div class="muted">${esc(p.phone||'بدون رقم')} ${p.age?' - '+esc(p.age)+' سنة':''} - ${gl(p.gender)}</div>${p.note?`<div class="muted">${esc(p.note)}</div>`:''}
+ <div class="muted">${esc(p.phone||'بدون رقم')} ${hasAge(p)?' - '+esc(ageTxt(p)):''} - ${gl(p.gender)}</div>${p.note?`<div class="muted">${esc(p.note)}</div>`:''}
  <div class="row" style="margin-top:10px"><button class="btn" onclick="go('edit',{pid:'${p.id}'})">+ زيارة / تحاليل جديدة</button>
  <button class="btn s sm" onclick="pForm('${p.id}')">تعديل البيانات</button><button class="btn d sm" onclick="pDel('${p.id}')">حذف المريض</button></div></div>
- <h3>سجل الزيارات (${vs.length})</h3>${vs.length?vs.map(v=>`<div class="card item" onclick="go('view',{id:'${v.id}'})"><div><b>${fd(v.date)}</b><span class="muted">${v.items.map(i=>esc(i.name)).slice(0,4).join('، ')}${v.items.length>4?' ...':''}</span></div><span class="tag">${v.items.length} تحليل${v.items.some(i=>flag(i,p.gender))?' ⚠':''} ${v.rel?'✅':'مسودة'}</span></div>`).join(''):'<div class="empty">مفيش زيارات لسه</div>'}
+ <h3>سجل الزيارات (${vs.length})</h3>${vs.length?vs.map(v=>`<div class="card item" onclick="go('view',{id:'${v.id}'})"><div><b>${fd(v.date)}</b><span class="muted">${v.items.map(i=>esc(i.name)).slice(0,4).join('، ')}${v.items.length>4?' ...':''}</span></div><span class="tag">${v.items.length} تحليل${v.items.some(i=>flag(i,agk(p)))?' ⚠':''} ${v.rel?'✅':'مسودة'}</span></div>`).join(''):'<div class="empty">مفيش زيارات لسه</div>'}
  ${trend(p,vs)}`}
 function trend(p,vs){ // مقارنة آخر قيم لنفس التحليل
- if(vs.length<2)return '';const m={};vs.forEach(v=>v.items.forEach(i=>{if(i.type==='num'&&i.value!=='')(m[i.name]=m[i.name]||[]).push([v.date,i.value,flag(i,p.gender)])}));
+ if(vs.length<2)return '';const m={};vs.forEach(v=>v.items.forEach(i=>{if(i.type==='num'&&i.value!=='')(m[i.name]=m[i.name]||[]).push([v.date,i.value,flag(i,agk(p))])}));
  const k=Object.keys(m).filter(x=>m[x].length>1);if(!k.length)return '';
  return `<h3>تطور التحاليل المتكررة</h3><div class="card"><table><tr><th>التحليل</th><th>النتائج (الأحدث أولًا)</th></tr>${k.map(n=>`<tr><td class="l">${esc(n)}</td><td class="l">${m[n].slice(0,6).map(x=>`<span class="${x[2]?'hi':''}">${esc(x[1])}</span>`).join(' ← ')}</td></tr>`).join('')}</table></div>`}
 function pDel(id){if(!confirm('تحذف المريض وكل نتايجه؟ مينفعش ترجعها (إلا من نسخة احتياطية).'))return;
@@ -185,7 +196,7 @@ function vEdit(){
  if(!D||D.key!==(V.id||'n'+V.pid)){const v=V.id&&S.visits.find(x=>x.id===V.id);
   D=v?{key:V.id,id:v.id,no:v.no,doc:v.doc||'',pid:v.pid,date:v.date,notes:v.notes||'',cm:v.cm,paid:v.paid||'',disc:v.disc||'',items:JSON.parse(JSON.stringify(v.items))}:{key:'n'+V.pid,pid:V.pid,doc:'',date:today(),notes:'',paid:'',disc:'',items:[]}}
  const p=S.patients.find(x=>x.id===D.pid);
- $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${p.age?p.age+' سنة - ':''}${gl(p.gender)}</span>${V.id&&(S.visits.find(x=>x.id===V.id)||{}).rel?'<div style="color:#b42318;font-weight:bold;margin-top:6px">⚠ التقرير معتمد. أي تعديل في النتائج أو التعليقات هيلغي الاعتماد.</div>':''}
+ $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${hasAge(p)?ageTxt(p)+' - ':''}${gl(p.gender)}</span>${V.id&&(S.visits.find(x=>x.id===V.id)||{}).rel?'<div style="color:#b42318;font-weight:bold;margin-top:6px">⚠ التقرير معتمد. أي تعديل في النتائج أو التعليقات هيلغي الاعتماد.</div>':''}
  <label>تاريخ الزيارة</label><input type="date" id="dd" value="${D.date}" onchange="D.date=this.value">
  <label>الطبيب المعالج (اختياري، بيظهر في التقرير)</label><input id="dd2" list="dl" value="${esc(D.doc||'')}" oninput="D.doc=this.value" placeholder="د. ..."><datalist id="dl">${[...new Set(S.visits.map(x=>x.doc).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist></div>
  <h3>١) اختار التحاليل</h3><input id="tq" autocomplete="off" placeholder="اكتب اسم التحليل أو اختصاره (CBC, TSH, FBS ...)" oninput="sug()" onkeydown="if(event.key==='Enter'){event.preventDefault();sugGo()}"><div id="sg"></div><div class="muted" style="margin:8px 0 2px">أو اختار من القوائم:</div><div id="pk"></div>
@@ -207,17 +218,17 @@ function sugGo(){if(SG.length)sugAdd(SG[0].id)}
 function pick(){const q='';const sel=new Set(D.items.map(i=>i.tid));
  const groups=Object.keys(CATS).map(c=>({c,l:S.tests.filter(t=>t.cat===c&&(!q||t.name.toLowerCase().includes(q)||CATS[c].includes(q)))})).filter(g=>g.l.length);
  $('pk').innerHTML=groups.map(g=>`<details ${q||g.l.some(t=>sel.has(t.id))?'open':''}><summary>${CATS[g.c]} (${g.l.length})</summary><div class="card" style="margin:4px 0">${g.l.map(t=>`<label class="chk"><input type="checkbox" ${sel.has(t.id)?'checked':''} onchange="tog('${t.id}',this.checked)"><span class="n" style="direction:ltr;text-align:right">${esc(t.name)}</span>${t.price?`<span class="muted">${t.price} ج</span>`:''}</label>`).join('')}</div></details>`).join('')||'<div class="empty">مفيش تحليل بالاسم ده. ضيفه من تبويب التحاليل.</div>'}
-function tog(id,on){if(on){const t=S.tests.find(x=>x.id===id);D.items.push({tid:t.id,name:t.name,cat:t.cat,type:t.type,unit:t.unit,low:t.low,high:t.high,lowF:t.lowF,highF:t.highF,normal:t.normal,price:t.price,rdef:t.rdef,value:t.type==='txt'?(t.normal||''):''})}
+function tog(id,on){if(on){const t=S.tests.find(x=>x.id===id);D.items.push({tid:t.id,name:t.name,cat:t.cat,type:t.type,unit:t.unit,low:t.low,high:t.high,lowF:t.lowF,highF:t.highF,lowN:t.lowN,highN:t.highN,lowI:t.lowI,highI:t.highI,normal:t.normal,price:t.price,rdef:t.rdef,value:t.type==='txt'?(t.normal||''):''})}
  else D.items=D.items.filter(i=>i.tid!==id);rs();tot()}
 function rs(){const p=S.patients.find(x=>x.id===D.pid);
- $('rs').innerHTML=D.items.length?D.items.map((i,k)=>`<div class="res ${flag(i,p.gender)?'hi':''}" id="rr${k}"><div><span style="direction:ltr;display:block;text-align:right">${esc(i.name)}</span><span class="muted" style="direction:ltr;display:block;text-align:right">${esc(refText(i,p.gender))} ${esc(i.unit)}${i.rdef?' <span class="tag" style="background:#fff3cd;color:#8a6d00">⚠ مدى افتراضي - راجعه</span>':''}</span></div>
- <input value="${esc(i.value)}" placeholder="النتيجة" ${i.type==='num'?'inputmode="decimal"':''} oninput="D.items[${k}].value=this.value;document.getElementById('rr${k}').classList.toggle('hi',!!flag(D.items[${k}],'${p.gender}'))"></div>`).join(''):'<div class="empty">اختار تحاليل من فوق</div>'}
+ $('rs').innerHTML=D.items.length?D.items.map((i,k)=>`<div class="res ${flag(i,agk(p))?'hi':''}" id="rr${k}"><div><span style="direction:ltr;display:block;text-align:right">${esc(i.name)}</span><span class="muted" style="direction:ltr;display:block;text-align:right">${esc(refText(i,agk(p)))} ${esc(i.unit)}${i.rdef?' <span class="tag" style="background:#fff3cd;color:#8a6d00">⚠ مدى افتراضي - راجعه</span>':''}</span></div>
+ <input value="${esc(i.value)}" placeholder="النتيجة" ${i.type==='num'?'inputmode="decimal"':''} oninput="D.items[${k}].value=this.value;document.getElementById('rr${k}').classList.toggle('hi',!!flag(D.items[${k}],'${agk(p)}'))"></div>`).join(''):'<div class="empty">اختار تحاليل من فوق</div>'}
 function newNo(d){const k=String(d||today()).replace(/-/g,'').slice(2);let n=S.visits.filter(x=>x.no&&x.no.startsWith(k)).length+1,c;do{c=k+String(n++).padStart(2,'0')}while(S.visits.some(x=>x.no===c));return c}
-function hv(v){const t=JSON.stringify([v.pid,v.date,v.cm,v.notes||'',v.doc||'',v.items.map(i=>[i.tid,i.name,i.value,i.low,i.high,i.lowF,i.highF,i.normal,i.unit])]);let h=5381;for(let k=0;k<t.length;k++)h=((h<<5)+h+t.charCodeAt(k))|0;return String(h)}
+function hv(v){const t=JSON.stringify([v.pid,v.date,v.cm,v.notes||'',v.doc||'',v.items.map(i=>[i.tid,i.name,i.value,i.low,i.high,i.lowF,i.highF,i.normal,i.unit].concat(i.lowN!==undefined||i.highN!==undefined||i.lowI!==undefined||i.highI!==undefined?[i.lowN,i.highN,i.lowI,i.highI]:[]))]);let h=5381;for(let k=0;k<t.length;k++)h=((h<<5)+h+t.charCodeAt(k))|0;return String(h)}
 function revForm(id){const v=S.visits.find(x=>x.id===id),p=S.patients.find(x=>x.id===v.pid);const rd=v.items.filter(i=>i.rdef);
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>راجع واعتمد التقرير</h2><div class="muted">التعليقات والمدى الافتراضي مسودات. بعد الاعتماد التقرير بيتجمّد (ما يتغيرش لو المكتبة اتحدثت)، ويطلع بالختم والتوقيع وتقدر تبعته على واتساب. أي تعديل بعد كده بيلغي الاعتماد.</div>
  <label>التعليقات (عدّلها لو لازم، وده النص اللي هيتجمّد)</label><textarea id="rvc" rows="8" style="direction:ltr;text-align:left">${esc(v.cm!==undefined?v.cm:autoCm(v.items))}</textarea>
- ${rd.length?`<div class="card" style="background:#fff3cd;color:#6b5300;margin-top:8px"><b>مدى افتراضي لم يُراجع (${rd.length}):</b><br>${rd.map(i=>esc(i.name)+': '+esc(refText(i,p.gender))+' '+esc(i.unit)).join('<br>')}</div>`:''}
+ ${rd.length?`<div class="card" style="background:#fff3cd;color:#6b5300;margin-top:8px"><b>مدى افتراضي لم يُراجع (${rd.length}):</b><br>${rd.map(i=>esc(i.name)+': '+esc(refText(i,agk(p)))+' '+esc(i.unit)).join('<br>')}</div>`:''}
  <label class="chk"><input type="checkbox" class="rvk" onchange="rvChk()"><span>راجعت النتائج وهي صحيحة</span></label>
  <label class="chk"><input type="checkbox" class="rvk" onchange="rvChk()"><span>راجعت التعليقات وهي مناسبة للحالة</span></label>
  ${rd.length?`<label class="chk"><input type="checkbox" class="rvk" onchange="rvChk()"><span>راجعت المدى الافتراضي وهو مناسب للجهاز والكيت</span></label>`:''}
@@ -234,12 +245,12 @@ function vSave(){if(!D.items.length){toast('اختار تحليل واحد عل�
 /* ============ عرض زيارة ============ */
 function vView(){const v=S.visits.find(x=>x.id===V.id);if(!v)return go('patients');const p=S.patients.find(x=>x.id===v.pid);
  const cats=Object.keys(CATS).filter(c=>v.items.some(i=>(i.cat||'oth')===c));const s=sum(v.items),n=s-(+v.disc||0);
- $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${p.age?p.age+' سنة - ':''}${gl(p.gender)} - ${fd(v.date)}</span>
+ $('app').innerHTML=`<div class="card"><b>${esc(p.name)}</b> <span class="muted">${hasAge(p)?ageTxt(p)+' - ':''}${gl(p.gender)} - ${fd(v.date)}</span>
  <div class="muted">رقم الزيارة: ${esc(vno(v))}${v.doc?' - الطبيب المعالج: '+esc(v.doc):''}</div>
  ${v.rel?`<div style="margin-top:6px;color:#1a7f37;font-weight:bold">✅ معتمد ${esc(fd(v.rel.at.slice(0,10)))}${v.rel.by?' - '+esc(v.rel.by):''}</div>${autoCm(v.items)!==v.cm?`<div class="muted" style="margin-top:4px">المكتبة فيها تعليقات أحدث من المعتمدة. التقرير المعتمد ما اتغيرش. <a href="#" onclick="report('${v.id}',{draft:1,cm:autoCm(S.visits.find(x=>x.id==='${v.id}').items)});return false">شوف نسخة مسودة بالتعليقات الجديدة</a></div>`:''}`:`<div style="margin-top:6px;color:#b42318;font-weight:bold">⚠ مسودة غير معتمدة (التقرير بيطلع بعلامة DRAFT وبدون ختم أو توقيع)</div><button class="btn w sm" style="margin-top:6px" onclick="revForm('${v.id}')">✅ راجع واعتمد</button>`}
  <div class="row" style="margin-top:10px"><button class="btn w" onclick="report('${v.id}')">📄 تقرير PDF / واتساب</button><button class="btn s sm" onclick="printR('${v.id}',false)">🖨 طباعة ورق أبيض</button><button class="btn s sm" onclick="printR('${v.id}',true)">🖨 طباعة ورق الليتر هيد</button><button class="btn s sm" onclick="lblForm('${v.id}')">🏷 ملصقات الأنابيب</button><button class="btn s sm" onclick="go('edit',{id:'${v.id}',pid:'${p.id}'})">تعديل النتائج</button><button class="btn s sm" onclick="go('patient',{id:'${p.id}'})">ملف المريض</button><button class="btn d sm" onclick="vDel('${v.id}')">حذف</button></div></div>
  <div class="card" style="overflow-x:auto;direction:ltr"><table class="ltr"><tr><th class="l">Test</th><th class="l">Result</th><th class="l">Unit</th><th class="l">Reference</th></tr>
- ${cats.map(c=>`<tr><td colspan="4" style="background:#f4f7f7;font-weight:bold;color:var(--td)">${CATS[c]}</td></tr>`+v.items.filter(i=>(i.cat||'oth')===c).map(i=>{const f=flag(i,p.gender);return `<tr><td class="l">${esc(i.name)}</td><td class="l ${f?'hi':''}">${esc(i.value)||'-'} ${f==='H'?'▲':f==='L'?'▼':f?'●':''}</td><td class="l">${esc(i.unit)}</td><td class="l">${esc(refText(i,p.gender))}</td></tr>`}).join('')).join('')}</table></div>
+ ${cats.map(c=>`<tr><td colspan="4" style="background:#f4f7f7;font-weight:bold;color:var(--td)">${CATS[c]}</td></tr>`+v.items.filter(i=>(i.cat||'oth')===c).map(i=>{const f=flag(i,agk(p));return `<tr><td class="l">${esc(i.name)}</td><td class="l ${f?'hi':''}">${esc(i.value)||'-'} ${f==='H'?'▲':f==='L'?'▼':f?'●':''}</td><td class="l">${esc(i.unit)}</td><td class="l">${esc(refText(i,agk(p)))}</td></tr>`}).join('')).join('')}</table></div>
  ${v.notes?`<div class="card"><b>ملاحظات:</b> ${esc(v.notes)}</div>`:''}${s?`<div class="card muted">الإجمالي ${s} - الخصم ${+v.disc||0} = <b>${n} ج</b> | المدفوع ${+v.paid||0} | المتبقي ${n-(+v.paid||0)}</div>`:''}`}
 function vDel(id){if(!confirm('تحذف الزيارة دي؟'))return;const v=S.visits.find(x=>x.id===id);S.visits=S.visits.filter(x=>x.id!==id);save();go('patient',{id:v.pid})}
 
@@ -258,13 +269,16 @@ function tForm(id){const t=S.tests.find(x=>x.id===id)||{cat:'oth',type:'num',uni
  <div id="tn1"><div class="row"><div class="grow"><label>الوحدة</label><input id="tu" dir="ltr" value="${esc(t.unit)}"></div></div>
  <div class="row"><div class="grow"><label>الحد الأدنى</label><input id="tl" type="number" step="any" value="${esc(t.low)}"></div><div class="grow"><label>الحد الأعلى</label><input id="th" type="number" step="any" value="${esc(t.high)}"></div></div>
  <div class="muted" style="margin-top:8px">لو المدى مختلف للسيدات، اكتبه هنا (اختياري):</div>
- <div class="row"><div class="grow"><label>أدنى (سيدات)</label><input id="tlf" type="number" step="any" value="${esc(t.lowF)}"></div><div class="grow"><label>أعلى (سيدات)</label><input id="thf" type="number" step="any" value="${esc(t.highF)}"></div></div></div>
+ <div class="row"><div class="grow"><label>أدنى (سيدات)</label><input id="tlf" type="number" step="any" value="${esc(t.lowF)}"></div><div class="grow"><label>أعلى (سيدات)</label><input id="thf" type="number" step="any" value="${esc(t.highF)}"></div></div>
+ <div class="muted" style="margin-top:8px">مدى الرضع (اختياري). لو فاضي، التحليل بيطلع بدون مدى وبدون علامة H/L للرضيع، وكمان أي رضيع أقل من ٦ أيام. مفيش مدى للبالغين بيتطبق عليهم.</div>
+ <div class="row"><div class="grow"><label>رضيع من ٦ لـ ٣٠ يوم أدنى</label><input id="tln" type="number" step="any" value="${esc(t.lowN??'')}"></div><div class="grow"><label>أعلى</label><input id="thn" type="number" step="any" value="${esc(t.highN??'')}"></div></div>
+ <div class="row"><div class="grow"><label>رضيع من ٣١ يوم لأقل من سنة أدنى</label><input id="tli" type="number" step="any" value="${esc(t.lowI??'')}"></div><div class="grow"><label>أعلى</label><input id="thi" type="number" step="any" value="${esc(t.highI??'')}"></div></div></div>
  <div id="tn2"><label>القيمة الطبيعية (تظهر تلقائي، وأي اختلاف يتعلّم)</label><input id="tno" value="${esc(t.normal)}" placeholder="Negative"></div>
  <div class="row" style="margin-top:14px"><button class="btn grow" onclick="tSave('${id||''}')">حفظ</button>${id?`<button class="btn d" onclick="tDel('${id}')">حذف</button>`:''}<button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`;tt();if(!id)$('tn').focus()}
 function tt(){const n=$('ty').value==='num';$('tn1').style.display=n?'':'none';$('tn2').style.display=n?'none':''}
 function tSave(id){const name=$('tn').value.trim();if(!name){toast('اكتب اسم التحليل');return}
- const d={name,cat:$('tc').value,price:$('tpr').value===''?0:+$('tpr').value,type:$('ty').value,unit:$('tu').value.trim(),low:$('tl').value,high:$('th').value,lowF:$('tlf').value,highF:$('thf').value,normal:$('tno').value.trim(),rdef:0};
- if(d.type==='txt'){d.unit='';d.low=d.high=d.lowF=d.highF=''}else d.normal='';
+ const d={name,cat:$('tc').value,price:$('tpr').value===''?0:+$('tpr').value,type:$('ty').value,unit:$('tu').value.trim(),low:$('tl').value,high:$('th').value,lowF:$('tlf').value,highF:$('thf').value,lowN:$('tln').value,highN:$('thn').value,lowI:$('tli').value,highI:$('thi').value,normal:$('tno').value.trim(),rdef:0};
+ if(d.type==='txt'){d.unit='';d.low=d.high=d.lowF=d.highF=d.lowN=d.highN=d.lowI=d.highI=''}else d.normal='';
  if(id)Object.assign(S.tests.find(x=>x.id===id),d);else{d.id=uid('t');S.tests.push(d)}save();closeM();listC();toast('تم الحفظ')}
 function tDel(id){if(!confirm('تحذف التحليل من القائمة؟ النتائج القديمة مش هتتأثر.'))return;S.tests=S.tests.filter(x=>x.id!==id);save();closeM();listC()}
 
@@ -279,7 +293,7 @@ function tubeOf(it){const t=S.tests.find(x=>x.id===it.tid)||{},n=it.name||'',sp=
 function tubeLabels(v,p){const g={};v.items.forEach(i=>{const k=tubeOf(i);(g[k]=g[k]||[]).push(i)});if(!v.no){v.no=newNo(v.date);save()}
  return Object.keys(g).map(k=>{const cv=document.createElement('canvas');cv.width=600;cv.height=360;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,600,360);c.strokeStyle='#bbb';c.lineWidth=2;c.strokeRect(1,1,598,358);
   c.fillStyle='#000';c.direction=/[\u0600-\u06ff]/.test(p.name)?'rtl':'ltr';c.textAlign='left';let fs=38;c.font='bold '+fs+'px '+FONT;while(c.measureText(p.name).width>560&&fs>20){fs-=2;c.font='bold '+fs+'px '+FONT}c.fillText(p.name,20,50);
-  c.direction='ltr';c.font='24px '+FONT;c.fillText((p.age?p.age+'Y ':'')+(p.gender==='F'?'F':p.gender==='M'?'M':'')+'   '+fd(v.date),20,88);
+  c.direction='ltr';c.font='24px '+FONT;c.fillText((hasAge(p)?ageSh(p)+' ':'')+(p.gender==='F'?'F':p.gender==='M'?'M':'')+'   '+fd(v.date),20,88);
   bars(c,v.no,40,104,520,120);c.textAlign='center';c.font='bold 30px '+FONT;c.fillText(v.no,300,260);
   c.textAlign='left';c.font='bold 28px '+FONT;c.fillText(k+' (auto)',20,320);c.textAlign='right';c.font='22px '+FONT;c.fillText(g[k].length+(g[k].length>1?' tests':' test'),580,320);return cv})}
 function lblForm(id){$('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>ملصقات الأنابيب</h2><div class="muted">بيتعمل ملصق لكل نوع أنبوبة (حسب نوع العينة) عليه الاسم والتاريخ وباركود برقم الزيارة. اكتب رقم الزيارة في خانة البحث أو اسكانه بالباركود سكانر عشان تفتح المريض.</div>
@@ -303,7 +317,7 @@ function vSettings(){const s=S.settings;
  <label>الطباعة على ورق عليه اللوجو: مسافة فاضية من فوق (مم)</label><input id="s6" type="number" inputmode="decimal" value="${esc(s.lhTop||50)}"><label>مسافة فاضية من تحت (مم)</label><input id="s7" type="number" inputmode="decimal" value="${esc(s.lhBot||25)}">
  <button class="btn" style="margin-top:12px" onclick="sSave()">حفظ</button></div>
  <div class="card"><h2 style="margin-top:0">نسخة احتياطية</h2><div class="muted">البيانات متخزنة على الجهاز ده بس. للانتقال بين الأجهزة: احفظ نسخة، ابعتها لنفسك (واتساب)، وافتحها على الجهاز التاني بزر "دمج" (بيضيف الجديد بس من غير ما يمسح حاجة). اعمل نسخة احتياطية كل فترة، وابعتها لنفسك على واتساب. تقدر تفتحها على أي جهاز تاني.</div>
- <div class="row" style="margin-top:10px"><button class="btn" onclick="exp()">⬇ حفظ نسخة احتياطية</button><button class="btn s" onclick="mrg=1;$('imp').click()">🔀 دمج نسخة من جهاز تاني</button><button class="btn s" onclick="mrg=0;$('imp').click()">⬆ استرجاع (استبدال)</button><input type="file" id="imp" accept=".json" style="display:none" onchange="imp(this)"></div>
+ <div class="row" style="margin-top:10px"><button class="btn" onclick="exp()">⬇ حفظ نسخة احتياطية</button><button class="btn s" onclick="toast('استيراد البيانات الحقيقية متوقف: نسخة تجريبية لحد ما نختار جهاز مدعوم')">🔀 دمج نسخة من جهاز تاني</button><button class="btn s" onclick="toast('استيراد البيانات الحقيقية متوقف: نسخة تجريبية لحد ما نختار جهاز مدعوم')">⬆ استرجاع (استبدال)</button><input type="file" id="imp" accept=".json" style="display:none" onchange="imp(this)"></div>
  <div class="muted" style="margin-top:10px">${S.patients.length} مريض - ${S.visits.length} زيارة - ${S.tests.length} تحليل</div></div>
  <div class="card"><button class="btn d sm" onclick="rst()">إرجاع قائمة التحاليل للوضع الأصلي</button></div>`}
 function sSave(){Object.assign(S.settings,{name:$('s1').value,phone:$('s2').value,hours:$('s3').value,owner:$('s4').value,footer:$('s5').value,lhTop:Math.max(0,+$('s6').value||50),lhBot:Math.max(0,+$('s7').value||25)});save();toast('تم الحفظ')}
@@ -313,7 +327,7 @@ function pdfOut(blob,name){const u=URL.createObjectURL(blob);window._pf=new File
 function exp(){dl(new Blob([JSON.stringify(S)],{type:'application/json'}),'alfarid-backup-'+today()+'.json');toast('تم تنزيل النسخة')}
 let mrg=0;
 function merge(d){const add=(k)=>{const ids=new Set(S[k].map(x=>x.id));d[k].forEach(x=>{if(!ids.has(x.id))S[k].push(x)})};add('patients');add('visits');add('tests');S.seq=Math.max(S.seq||0,d.seq||0)}
-function imp(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.patients||!d.visits||!d.tests)throw 0;
+function imp(el){el.value='';toast('الاستيراد متوقف في النسخة التجريبية');return;const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.patients||!d.visits||!d.tests)throw 0;
  if(mrg){merge(d);save();toast('تم الدمج');go('patients');el.value='';return}
  if(!confirm('هتستبدل كل البيانات الحالية ببيانات النسخة ('+d.patients.length+' مريض). متأكد؟'))return;S=d;save();toast('تم الاسترجاع');go('patients')}catch(e){alert('الملف ده مش نسخة احتياطية صحيحة')}};r.readAsText(f)}
 function rst(){if(!confirm('هترجع قائمة التحاليل للأصل وتمسح تعديلاتك عليها (المرضى مش هيتأثروا). متأكد؟'))return;S.tests=seed();mergeCat(true);toast('تم')}
@@ -363,15 +377,15 @@ function drawReport(v,p,lh,o){const DR=!v.rel||!!(o&&o.draft);const pages=[];let
   y=lh?LT:300;
   if(pg===1){txt('LABORATORY REPORT',W/2,y+30,{a:'center',b:1,s:30,col:TEAL,d:'ltr'});c.font='bold 30px '+FONT;const tw=c.measureText('LABORATORY REPORT').width;c.fillStyle=GRN;c.fillRect((W-tw)/2,y+38,tw,3);y+=70;
    const lab={s:21,col:'#6b6f73',b:1},val={s:25,b:1,col:'#222'};
-   const BH=v.doc?190:150;c.fillStyle='#faf8f6';c.fillRect(60,y,W-120,BH);c.strokeStyle='#d9d9d9';c.lineWidth=2;c.strokeRect(60,y,W-120,BH);c.fillStyle=GRN;c.fillRect(60,y,8,BH);
-   L('PATIENT NAME',92,y+40,lab);txt(p.name,92+0,y+82,{b:1,s:34,a:'left',d:'rtl',col:'#111'});
-   L('AGE / SEX',92,y+122,lab);L((p.age?p.age+' Y':'-')+'  /  '+(p.gender==='F'?'Female':p.gender==='M'?'Male':'-'),260,y+122,val);
+   const BH=150;c.fillStyle='#faf8f6';c.fillRect(60,y,W-120,BH);c.strokeStyle='#d9d9d9';c.lineWidth=2;c.strokeRect(60,y,W-120,BH);c.fillStyle=GRN;c.fillRect(60,y,8,BH);
+   L('PATIENT NAME',92,y+40,lab);{let fs=25;c.font='bold '+fs+'px '+FONT;while(c.measureText(p.name).width>440&&fs>16){fs-=1;c.font='bold '+fs+'px '+FONT}txt(p.name,260,y+40,{b:1,s:fs,a:'left',d:/[\u0600-\u06ff]/.test(p.name)?'rtl':'ltr',col:'#222'})}
+   L('AGE / SEX',92,y+86,lab);L((hasAge(p)?ageEn(p):'-')+'  /  '+(p.gender==='F'?'Female':p.gender==='M'?'Male':'-'),260,y+86,val);
    c.fillStyle='#d9d9d9';c.fillRect(740,y+18,2,114);
-   if(v.doc){L('REFERRING DOCTOR',92,y+168,lab);txt(v.doc,420,y+168,{b:1,s:25,a:'left',d:/[\u0600-\u06ff]/.test(v.doc)?'rtl':'ltr',col:'#222'})}
+   if(v.doc){L('REFERRING DOCTOR',92,y+122,lab);txt(v.doc,420,y+122,{b:1,s:25,a:'left',d:/[\u0600-\u06ff]/.test(v.doc)?'rtl':'ltr',col:'#222'})}
    L('VISIT NO.',770,y+40,lab);L(vno(v),1000,y+40,val);
    L('ATTENDANCE DATE',770,y+86,lab);L(fd(v.date),1000,y+86,val);
    L('REPORT DATE',770,y+122,lab);L(fd(today()),1000,y+122,val);
-   y+=v.doc?225:185}
+   y+=185}
   else{L('Patient: ',60,y+30,{s:22,col:'#6b6f73',b:1});txt(p.name,160,y+30,{s:24,b:1,a:'left',d:'rtl'});L('Visit No. '+vno(v),W-360,y+30,{s:22,col:'#6b6f73'});y+=60}
   if(!noHead)headRow()}
  function headRow(){const f={s:22,b:1,col:'#6b6f73'};L('Test',X1,y+26,f);L('Result',X2,y+26,f);L('Unit',X3,y+26,f);L('Ref. Range',X4,y+26,f);c.fillStyle=TEAL;c.fillRect(60,y+38,W-120,3);y+=52}
@@ -380,13 +394,14 @@ function drawReport(v,p,lh,o){const DR=!v.rel||!!(o&&o.draft);const pages=[];let
  cats.forEach(k=>{if(y+46+56>limit){newPage()}
   y+=14;ul(CATE[k]||k,X1,y+30,{b:1,s:28,col:GRND});y+=48;
   v.items.filter(i=>(i.cat||'oth')===k).forEach(i=>{if(y+50>limit){newPage()}
-   const f=flag(i,p.gender);
+   const f=flag(i,agk(p));
    L(i.name,X1,y+32,{s:24,b:1,col:'#222'});
    const val=(i.value||'-')+(f==='H'?'  \u25b2':f==='L'?'  \u25bc':f?'  \u25cf':'');
    L(val,X2,y+32,{s:26,b:1,col:f?'#c62828':'#111'});
-   L(i.unit||'',X3,y+32,{s:22,col:'#444'});L(refText(i,p.gender),X4,y+32,{s:22,col:'#444'});
+   L(i.unit||'',X3,y+32,{s:22,col:'#444'});L(refText(i,agk(p)),X4,y+32,{s:22,col:'#444'});
    y+=50})});
- if(v.items.some(i=>flag(i,p.gender))){y+=10;L('\u25b2 High   \u25bc Low   \u25cf Abnormal',X1,y+20,{s:20,col:'#c62828'});y+=34}
+ if(v.items.some(i=>flag(i,agk(p)))){y+=10;L('\u25b2 High   \u25bc Low   \u25cf Abnormal',X1,y+20,{s:20,col:'#c62828'});y+=34}
+ if(grp(p)&&v.items.some(i=>i.type!=='txt'&&/^N\/A/.test(refText(i,agk(p))))){L('* No age-specific range set. Adult ranges are not applied to infants under 1 year.',X1,y+20,{s:20,col:'#444'});y+=34}
  const wrap=(t,w,fs)=>{c.font=fs+'px '+SERIF;const ws=t.split(' ');let l='',o=[];ws.forEach(x=>{const n=l?l+' '+x:x;if(c.measureText(n).width>w&&l){o.push(l);l=x}else l=n});o.push(l);return o};
  {const gc=o&&o.cm!==undefined?o.cm:v.cm!==undefined?v.cm:autoCm(v.items),para=[];if(v.notes)para.push(v.notes);String(gc||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>para.push(s));
   if(para.length){if(y+110>limit)newPage(true);y+=22;L('Comments :',X1,y+26,{b:1,s:26,col:'#000',f:SERIF});y+=40;
@@ -430,22 +445,28 @@ async function report(id,o){await LOGOREADY;const v=S.visits.find(x=>x.id===id),
  const fname=(p.name.replace(/[\\/:*?"<>|]/g,'')+'_'+v.date+(dr?'_DRAFT':'')+'.pdf');RP={blob,fname,p,v,dr};
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>تقرير ${esc(p.name)}</h2>
  ${pages.map((cv,k)=>`<img id="pv" alt="صفحة ${k+1}" src="${cv.toDataURL('image/jpeg',0.8)}">`).join('')}
- ${dr?`<div class="card" style="background:#fdecea;color:#8a1c12">⚠ مسودة غير معتمدة. المشاركة على واتساب متوقفة لحد ما التقرير يتراجع ويتعتمد.</div>${v.rel?'':`<div class="row"><button class="btn w grow" onclick="closeM();revForm('${v.id}')">✅ راجع واعتمد</button></div>`}`:`<div class="row"><button class="btn w grow" onclick="waChat()">📲 فتح واتساب المريض</button></div>`}
- <div class="row" style="margin-top:8px">${dr?'':`<button class="btn s grow" onclick="shareR()">مشاركة الملف (اختار المريض بنفسك)</button>`}<button class="btn s" onclick="dl(RP.blob,RP.fname)">⬇ تنزيل PDF</button><button class="btn s" onclick="closeM()">إغلاق</button></div>
- <div class="muted" style="margin-top:8px">"فتح واتساب المريض": بينزل ملف PDF وبيفتح محادثة المريض برقمه المسجل على طول، وانت بس ترفق الملف (📎 مستند واختار الملف). لو مفيش رقم مسجل بيفتح قايمة المشاركة.</div></div></div>`}
+ ${dr?`<div class="card" style="background:#fdecea;color:#8a1c12">⚠ مسودة غير معتمدة. المشاركة على واتساب متوقفة لحد ما التقرير يتراجع ويتعتمد.</div>${v.rel?'':`<div class="row"><button class="btn w grow" onclick="closeM();revForm('${v.id}')">✅ راجع واعتمد</button></div>`}`:`<div class="row"><button class="btn w grow" onclick="waChat()">📲 إرسال PDF على واتساب</button></div>`}
+ <div class="row" style="margin-top:8px">${dr?'':`<button class="btn s grow" onclick="waOpen()">فتح محادثة المريض (أرفق الملف بإيدك)</button>`}<button class="btn s" onclick="dl(RP.blob,RP.fname)">⬇ تنزيل PDF</button><button class="btn s" onclick="closeM()">إغلاق</button></div>
+ <div class="muted" style="margin-top:8px">"إرسال PDF على واتساب": على الموبايل بيفتح قايمة المشاركة بالملف جاهز: اختار واتساب ثم المريض (واتساب نفسه هو اللي بيختار المحادثة، التطبيق مايقدرش يبعت لوحده). لو الجهاز مابيدعمش مشاركة الملفات، بينزل الملف ويفتح محادثة المريض وانت ترفقه. "فتح محادثة المريض" بيعمل ده يدوي.</div></div></div>`}
 function greet(d){d=d||new Date();return d.getHours()<12?'صباح الخير':'مساء الخير'}
 function waChat(){const{blob,fname,p,v}=RP;if(RP.dr){toast('مسودة: لازم تراجع وتعتمد التقرير الأول');return}const n=waNum(p.phone);if(n.length<11){toast('مفيش رقم تليفون مسجل للمريض');shareR();return}
  const msg=greet()+' يا أفندم\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
+ if(CANSH(blob,fname)){shareR();return}
  dl(blob,fname);window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');toast('الملف نزل. ارفقه في المحادثة 📎')}
+function waOpen(){const{blob,fname,p,v}=RP;if(RP.dr){toast('مسودة: لازم تراجع وتعتمد التقرير الأول');return}const n=waNum(p.phone);if(n.length<11){toast('مفيش رقم تليفون مسجل للمريض');return}const msg=greet()+' يا أفندم\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;dl(blob,fname);window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');toast('الملف نزل. ارفقه في المحادثة 📎')}
+function CANSH(blob,fname){try{return !!(navigator.canShare&&navigator.canShare({files:[new File([blob],fname,{type:'application/pdf'})]}))}catch(e){return false}}
 async function shareR(){const{blob,fname,p,v}=RP;if(RP.dr){toast('مسودة: لازم تراجع وتعتمد التقرير الأول');return}const msg=greet()+' يا أفندم\nنتيجة تحاليلك من '+S.settings.name+' بتاريخ '+fd(v.date)+'.\nتليفون: '+S.settings.phone;
  const file=new File([blob],fname,{type:'application/pdf'});
  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:msg,title:fname});return}catch(e){if(e.name==='AbortError')return}}
  dl(blob,fname);const n=waNum(p.phone);setTimeout(()=>window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank'),600);
  toast('الملف نزل. ارفعه في محادثة واتساب المريض')}
 
-mergeCat();applyDefR();
+function applyNeo(){if(S.neov)return;S.tests.forEach(t=>{if(t.type!=='num'||t.lowN!==undefined)return;const n=String(t.name||'').toLowerCase();if(/urine|indirect/.test(n)||!/bilirubin/.test(n))return;
+ if(/total/.test(n)){t.lowN='0';t.highN='1'}else if(/direct/.test(n)){t.lowN='0';t.highN='0.25'}});S.neov=1;save()}
+mergeCat();applyDefR();applyNeo();
 render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
+
 </body>
-  </html>
+ </html>
