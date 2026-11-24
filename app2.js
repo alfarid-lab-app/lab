@@ -353,7 +353,7 @@ function impMatch(k){const q=nk(k),a=CBCAL[q]||q;const it=D.items.find(i=>nk(i.n
  const t=S.tests.find(x=>nk(x.name)===a||nk(x.name)===q);return t?{t}:{}}
 let IMP=[];
 function impForm(){$('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>استيراد نتائج</h2><div class="muted" style="font-size:13px">الصق الكود. كل سطر: <b>الاسم = القيمة الوحدة</b> مثال:<br><span style="direction:ltr;display:block;text-align:left">WBC=6.2 10^3/uL<br>RBC=4.8 10^6/uL<br>Hb=13.5 g/dL</span></div><div class="muted" style="font-size:12px;margin-top:6px">كود CBC بالترتيب الثابت للجهاز، سطر لكل صف: <b>Name | Value | Unit | Low-High | H/L</b><span style="direction:ltr;display:block;text-align:left">WBC | 4.72 | 10^9/L | 4.00-12.00 |<br>Mid% | 18.8 | % | 1.0-15.0 | H</span></div><textarea id="impt" rows="9" style="direction:ltr;text-align:left;width:100%"></textarea><div class="row"><button class="btn grow" onclick="impPrev()">معاينة</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`}
-function impPrev(){{const cr=cbcCode($('impt').value);if(cr){if(cr.err.length){toast(cr.err[0]+(cr.err.length>1?' (+'+(cr.err.length-1)+' أخطاء)':''));return}if(!cr.rows.some(r=>r.v!=='')){toast('مفيش قيم');return}CBCR=cr.rows;CBCH=null;CBCHOK=false;cbcRev();return}}IMP=impParse($('impt').value);if(!IMP.length){toast('مفيش بيانات');return}
+function impPrev(){{const cr=cbcCode($('impt').value);if(cr){if(cr.err.length){toast(cr.err[0]+(cr.err.length>1?' (+'+(cr.err.length-1)+' أخطاء)':''));return}if(!cr.rows.some(r=>r.v!=='')){toast('مفيش قيم');return}CBCR=cbcCheck(cr.rows);CBCH=null;CBCHOK=false;cbcRev();return}}IMP=impParse($('impt').value);if(!IMP.length){toast('مفيش بيانات');return}
  IMP.forEach(r=>{r.m=r.bad?{}:impMatch(r.k)});
  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)closeM()"><div><h2>راجع قبل الإدخال</h2><table style="width:100%;font-size:13px;direction:ltr"><tr><th>Name</th><th>Value</th><th>Unit</th><th>الحالة</th></tr>${IMP.map((r,k)=>`<tr><td>${esc(r.k)}</td><td>${esc(r.v)}</td><td>${esc(r.u)}</td><td style="direction:rtl">${r.bad?'⚠ سطر مش مفهوم، هيتجاهل':r.m.it?'يملا: '+esc(r.m.it.name)+(String(r.m.it.value||'')!==''?' (كان '+esc(r.m.it.value)+')':''):r.m.t?'يضاف: '+esc(r.m.t.name):'تحليل جديد (من غير مدى مرجعي)'}</td></tr>`).join('')}</table><div class="muted" style="font-size:12px;margin:6px 0">التحاليل الجديدة بتتضاف للكتالوج من غير مدى مرجعي (مش بنخمّن مدى). النتائج بتتعلّم "مستورد - راجعه".</div><div class="row"><button class="btn grow" onclick="impDo()">تأكيد وإدخال</button><button class="btn s" onclick="closeM()">إلغاء</button></div></div></div>`}
 function impDo(){let n=0;IMP.forEach(r=>{if(r.bad||r.v==='')return;let it=r.m.it;if(!it){let t=r.m.t;if(!t){t={id:uid('i'),cat:'cbc',name:r.k,type:'num',unit:r.u,low:'',high:'',lowF:'',highF:'',normal:'',price:0};S.tests.push(t)}tog(t.id,true);it=D.items.find(x=>x.tid===t.id)}
@@ -411,7 +411,7 @@ function cbcParseW(words){const rows=CBCT.map(r=>({n:r[0],tn:r[1],u:r[2],dec:r[3
  const pts=rows.map((r,i)=>r.nw?[i,r.nw.yc]:null).filter(Boolean);if(pts.length<4)return rows;
  const n=pts.length,sx=pts.reduce((a,p)=>a+p[0],0),sy=pts.reduce((a,p)=>a+p[1],0),sxx=pts.reduce((a,p)=>a+p[0]*p[0],0),sxy=pts.reduce((a,p)=>a+p[0]*p[1],0);const b=(n*sxy-sx*sy)/(n*sxx-sx*sx),a=(sy-b*sx)/n;
  const nx1=Math.max(...pts.map((p,k)=>rows[p[0]].nw.x1));
- rows.forEach((r,i)=>{r.yc=a+b*i;r.hh=Math.abs(b);const band=W.filter(w=>Math.abs(w.yc-r.yc)<Math.abs(b)*0.45&&w.x0>=(r.nw?r.nw.x1-2:nx1-2)).sort((p,q)=>p.x0-q.x0);
+ rows.forEach((r,i)=>{r.yc=r.nw?r.nw.yc:a+b*i;r.hh=Math.abs(b);if(!r.nw){r.w=['اسم الصف مش ظاهر في الصورة، مش هقرأه من مكان تخميني'];return}const band=W.filter(w=>Math.abs(w.yc-r.yc)<Math.abs(b)*0.45&&w.x0>=(r.nw?r.nw.x1-2:nx1-2)).sort((p,q)=>p.x0-q.x0);
   r.raw=band.map(w=>w.t).join(' ');cbcLine(r,r.raw)});
  return rows}
 function cbcPrep(im,opt){opt=opt||{};const W0=im.naturalWidth,H0=im.naturalHeight,s0=Math.min(1,(opt.w||1600)/W0)*(opt.up||1);
@@ -456,11 +456,11 @@ async function cbcPick(inp){const f=inp.files&&inp.files[0];if(!f)return;inp.val
   await CW.setParameters({tessedit_pageseg_mode:'7'});
   for(let i=0;i<rows.length;i++){const w=rows[i];if(w.v!==''||w.yc===undefined)continue;cbcMsg('إعادة قراءة السطر '+(i+1)+' ...');
    const y0=Math.max(0,w.yc-w.hh*0.9),hh=Math.min(cv.height-y0,w.hh*1.8);const bc=cbcGray(cv,0,y0,cv.width,hh,2,0);
-   const rr=await CW.recognize(bc);const s=cbcClean(rr.data.text);const m=s.match(/^(\d{1,2})?\s*([A-Za-z][A-Za-z0-9#%\-]*)\s*(.*)$/);if(!m)continue;
+   const rr=await CW.recognize(bc);const s=cbcClean(rr.data.text);const m=s.match(/^(\d{1,2})?\s*([A-Za-z][A-Za-z0-9#%\-]*)\s*(.*)$/);if(!m)continue;{const q=m[2].toLowerCase().replace(/[^a-z0-9#%\-]/g,''),b=w.n.toLowerCase();let d=lev(q,b);if(b.endsWith('#'))d=Math.min(d,lev(q,b.slice(0,-1)),lev(q.slice(0,-1),b.slice(0,-1)));if(d>(b.length<=3?0:1))continue}
    const t={...w,w:[]};cbcLine(t,m[3]);if(t.v){Object.assign(w,{v:t.v,l:t.l||w.l,h:t.h||w.h,fl:t.fl,w:t.w.concat(['قراءة واحدة بس، راجع']),st:'bad',raw:s})}}
   rows.forEach(w=>{if(w.yc!==undefined){const y0=Math.max(0,w.yc-w.hh*0.9),hh=Math.min(cv.height-y0,w.hh*1.5),sw=cv.width*0.8,c2=document.createElement('canvas'),k=Math.min(1,800/sw);c2.width=Math.round(sw*k);c2.height=Math.round(hh*k);c2.getContext('2d').drawImage(cv,0,y0+w.hh*0.1,sw,hh,0,0,c2.width,c2.height);w.img=c2.toDataURL('image/jpeg',.7)}});
   CBCH=null;CBCHOK=false;{const r0=rows.find(r=>r.yc!==undefined);if(r0){const p=r0.hh,yc21=r0.yc+(20-rows.indexOf(r0))*p,y0=Math.max(0,yc21+0.6*p),hh=Math.min(cv.height-y0,7.6*p);if(hh>p*3){const sc=Math.min(1,1100/cv.width);CBCH=cbcGray(cv,0,y0,cv.width,hh,sc,0).toDataURL('image/jpeg',.75)}}}
-  CBCR=rows;phr();cbcRev()
+  cbcCheck(rows);if(rows.some(r=>r.v==='')){rows.forEach(r=>{if(r.v!==''&&r.st!=='bad'){r.st='bad';r.w=(r.w||[]).concat(['الصورة/القراءة ناقصة صفوف (مش 21)، كل الصفوف لازم تتراجع بعينك'])}})}CBCR=rows;phr();cbcRev()
  }catch(e){closeM();toast(String(e&&e.message)==='load'?'مكتبة القراءة محتاجة نت أول مرة. اتأكد من الاتصال':'تعذرت القراءة. جرب صورة أوضح');console.log(e)}}
 function cbcRev(){const bad=CBCR.filter(r=>r.st!=='ok').length;const col={ok:'#16a34a',warn:'#d97706',bad:'#dc2626',miss:'#dc2626'};
  $('modal').innerHTML=`<div class="modal" style="align-items:flex-start;overflow:auto"><div style="max-width:100%"><h2>راجع كل صف مع الصورة</h2>${CBCH?`<div style="border:1px solid #ccc;border-radius:8px;padding:6px;margin:6px 0"><div style="font-size:12px">المنحنيات (WBC / RBC / PLT) اتقصّت من الصورة:</div><img src="${CBCH}" style="width:100%;background:#fff"><label style="font-size:12px"><input type="checkbox" onchange="CBCHOK=this.checked" ${CBCHOK?'checked':''}> القص سليم وفيه المنحنيات التلاتة كاملة، ضيفه للتقرير</label></div>`:''}<div class="muted" style="font-size:12px">القراءة الآلية ممكن تغلط. كل صف بيظهر معاه جزء الصورة. عدّل أي رقم غلط. المدى المطبوع بيتحفظ للزيارة دي بس. مفيش اعتماد تلقائي. ${bad?'<b style="color:#b45309">'+bad+' صف محتاج مراجعة (ملوّن).</b>':''}</div>
@@ -484,6 +484,17 @@ function cbcCode(t){t=String(t||'');if(!/\|/.test(t))return null;const rows=CBCT
   if(r.v!==''&&r.l!==''&&r.h!==''){const x=+r.v,f=x<+r.l?'L':x>+r.h?'H':'';if(f!==r.fl){r.w.push('العلامة H/L في الكود مختلفة عن الحساب ('+(f||'عادي')+')');r.st='bad'}}
   if(r.v!==''&&r.l===''&&r.h==='')r.w.push('من غير مدى')});
  return{rows,err}}
+
+function cbcCheck(rows){const g={};rows.forEach(r=>{const x=parseFloat(r.v);if(r.v!==''&&!isNaN(x))g[r.n]=x});const bad=(names,msg)=>{rows.forEach(r=>{if(names.includes(r.n)&&r.v!==''){r.st='bad';r.w=(r.w||[]).concat([msg])}})};
+ const has=(...a)=>a.every(n=>g[n]!==undefined),near=(a,b,rel,ab)=>Math.abs(a-b)<=Math.max(ab,Math.abs(b)*rel);
+ if(has('RBC','MCV','HCT')&&!near(g.MCV*g.RBC/10,g.HCT,.05,.8))bad(['RBC','MCV','HCT'],'فحص حسابي: MCV × RBC ÷ 10 لازم يساوي HCT تقريبًا ('+(g.MCV*g.RBC/10).toFixed(1)+' مقابل '+g.HCT+')');
+ if(has('RBC','MCH','HGB')&&!near(g.MCH*g.RBC/10,g.HGB,.06,.4))bad(['RBC','MCH','HGB'],'فحص حسابي: MCH × RBC ÷ 10 لازم يساوي HGB تقريبًا ('+(g.MCH*g.RBC/10).toFixed(1)+' مقابل '+g.HGB+')');
+ if(has('HGB','HCT','MCHC')&&!near(g.HGB/g.HCT*100,g.MCHC,.05,1.2))bad(['HGB','HCT','MCHC'],'فحص حسابي: HGB ÷ HCT × 100 لازم يساوي MCHC تقريبًا ('+(g.HGB/g.HCT*100).toFixed(1)+' مقابل '+g.MCHC+')');
+ if(has('WBC','Lym#','Mid#','Gran#')&&!near(g['Lym#']+g['Mid#']+g['Gran#'],g.WBC,.06,.2))bad(['WBC','Lym#','Mid#','Gran#'],'فحص حسابي: مجموع Lym# و Mid# و Gran# لازم يساوي WBC');
+ if(has('Lym%','Mid%','Gran%')&&Math.abs(g['Lym%']+g['Mid%']+g['Gran%']-100)>2)bad(['Lym%','Mid%','Gran%'],'فحص حسابي: مجموع النسب لازم يبقى حوالي 100');
+ if(has('PLT','MPV','PCT')&&!near(g.PLT*g.MPV/1000,g.PCT,.1,.12))bad(['PLT','MPV','PCT'],'فحص حسابي: PLT × MPV ÷ 1000 لازم يساوي PCT تقريبًا ('+(g.PLT*g.MPV/1000).toFixed(2)+' مقابل '+g.PCT+')');
+ if(has('Lym#','Mid#','Gran#','Lym%','Mid%','Gran%')){const t=g['Lym#']+g['Mid#']+g['Gran#'];if(t>0&&['Lym','Mid','Gran'].some(k=>Math.abs(g[k+'#']/t*100-g[k+'%'])>3.5))bad(['Lym#','Mid#','Gran#','Lym%','Mid%','Gran%'],'فحص حسابي: نسب Lym و Mid و Gran مش متوافقة مع الأعداد')}
+ return rows}
 function refreshVisit(id){const v=S.visits.find(x=>x.id===id);if(!v)return;applyNeo(true);if(v.rel&&!confirm('الزيارة معتمدة. تحديث نطاقات الأطفال هيلغي الاعتماد ولازم تراجع وتعتمد التقرير تاني. تكمل؟'))return;let c=0;(v.items||[]).forEach(i=>{if(i.type==='txt')return;const t=S.tests.find(x=>x.id===i.tid)||S.tests.find(x=>nk(x.name)===nk(i.name));if(!t)return;['lowN','highN','lowI','highI'].forEach(k=>{if(!em(t[k])&&em(i[k])){i[k]=t[k];c++}})});if(c&&v.rel)delete v.rel;save();toast(c?'اتحدثت النطاقات. راجع واعتمد التقرير تاني':'مفيش نطاقات أطفال ناقصة');render()}
 function refreshNeo(){const c=applyNeo(true);alert('تم تحديث نطاقات الأطفال: '+c+' عنصر (الزيارات المعتمدة لا تتغير)');render()}
 mergeCat();applyDefR();applyNeo();applyNeo2();
