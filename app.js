@@ -1,3 +1,4 @@
+
 /* ============ بيانات أساسية ============ */
 const KEY='alfarid_lab_v1';
 const CATS={cbc:'صورة دم كاملة',sugar:'سكر',lip:'دهون',liv:'كبد',kid:'كلى وأملاح',thy:'غدة درقية',hor:'هرمونات وفيتامينات',inf:'مناعة والتهابات',coag:'سيولة وقلب',uri:'تحليل بول',sto:'تحليل براز',oth:'أخرى',hem:'أمراض الدم والتجلط',imm:'مناعة وأجسام مضادة',mol:'تحاليل جزيئية PCR',flow:'فلو سيتومتري',tum:'دلالات الأورام',drg:'أدوية وسموم',spc:'تحاليل متخصصة',mic:'ميكروبيولوجي ومزارع',flu:'سوائل الجسم',pat:'باثولوجي',alg:'حساسية'};
@@ -62,10 +63,10 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 function waNum(p){p=String(p||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g,'');if(p.startsWith('00'))p=p.slice(2);if(p.startsWith('20')&&p.length>=12)return p;if(p.startsWith('0'))return '20'+p.slice(1);if(p.length===10&&p[0]==='1')return '20'+p;return p}
 
 /* ============ مرجع النتائج ============ */
-function range(it,g){g=String(g||'');const q=g.split(':'),gd=q[0],gr=q[1]||'';
+function range(it,g){if(it.pr)return[it.pr.l,it.pr.h];g=String(g||'');const q=g.split(':'),gd=q[0],gr=q[1]||'';
  if(gr==='Z')return['',''];if(gr==='N')return[it.lowN??'',it.highN??''];if(gr==='I')return[it.lowI??'',it.highI??''];
  let l=it.low,h=it.high;if(gd==='F'&&(it.lowF!==''||it.highF!=='')){l=it.lowF;h=it.highF}return[l,h]}
-function refText(it,g){if(it.type==='txt')return it.normal||'';const[l,h]=range(it,g);if(String(g).includes(':')&&l===''&&h==='')return 'N/A (age)*';if(l===''&&h==='')return it.refNote||'';if(l===''||l===null)return '< '+h;if(h===''||h===null)return '> '+l;if(+l===0&&+h>0)return '< '+h;return l+' - '+h}
+function refText(it,g){if(it.type==='txt')return it.normal||'';if(it.pr)return(it.pr.l!==''||it.pr.h!=='')?it.pr.l+' - '+it.pr.h:'';const[l,h]=range(it,g);if(String(g).includes(':')&&l===''&&h==='')return 'N/A (age)*';if(l===''&&h==='')return it.refNote||'';if(l===''||l===null)return '< '+h;if(h===''||h===null)return '> '+l;if(+l===0&&+h>0)return '< '+h;return l+' - '+h}
 function flag(it,g){const v=String(it.value??'').trim();if(!v)return '';
  if(it.type==='txt'){if(!it.normal)return '';return v.toLowerCase()===it.normal.toLowerCase()?'':'*'}
  const x=parseFloat(v.replace(',','.'));if(isNaN(x))return '';const[l,h]=range(it,g);
