@@ -461,13 +461,17 @@ async function shareR(){const{blob,fname,p,v}=RP;if(RP.dr){toast('مسودة: ل
  dl(blob,fname);const n=waNum(p.phone);setTimeout(()=>window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank'),600);
  toast('الملف نزل. ارفعه في محادثة واتساب المريض')}
 
-function applyNeo(){if(S.neov3)return;S.tests.forEach(t=>{if(t.type!=='num'||t.lowN!==undefined)return;const n=String(t.name||'').toLowerCase();if(/urine|indirect/.test(n)||!/bilirubin/.test(n))return;
- if(/total/.test(n)){t.lowN='0';t.highN='1'}else if(/direct/.test(n)){t.lowN='0';t.highN='0.25'}});S.neov3=1;save()}
-function applyNeo2(){if(S.neov2)return;let ch=0;S.visits.forEach(v=>{if(v.rel)return;(v.items||[]).forEach(i=>{if(i.type==='txt'||i.lowN!==undefined||i.highN!==undefined||i.lowI!==undefined||i.highI!==undefined)return;const t=S.tests.find(x=>x.id===i.tid)||S.tests.find(x=>nk(x.name)===nk(i.name));if(t&&(t.lowN!==undefined||t.lowI!==undefined)){i.lowN=t.lowN;i.highN=t.highN;i.lowI=t.lowI;i.highI=t.highI;ch++}})});S.neov2=1;save()}
+const em=v=>v===undefined||v===null||v==='';
+function applyNeo(f){let ch=0;if(S.neov4&&!f)return 0;S.tests.forEach(t=>{if(t.type!=='num'||!em(t.lowN)||!em(t.highN))return;const n=String(t.name||'').toLowerCase();if(/urine|indirect/.test(n)||!/bilirubin|\bbili\b/.test(n))return;
+ if(/total|\bt\b|\(t\)/.test(n)){t.lowN='0';t.highN='1';ch++}else if(/direct|conj|\bd\b|\(d\)/.test(n)){t.lowN='0';t.highN='0.25';ch++}});
+ S.visits.forEach(v=>{if(v.rel)return;(v.items||[]).forEach(i=>{if(i.type==='txt'||!em(i.lowN)||!em(i.highN)||!em(i.lowI)||!em(i.highI))return;const t=S.tests.find(x=>x.id===i.tid)||S.tests.find(x=>nk(x.name)===nk(i.name));if(t&&(!em(t.lowN)||!em(t.highN)||!em(t.lowI)||!em(t.highI))){i.lowN=t.lowN;i.highN=t.highN;i.lowI=t.lowI;i.highI=t.highI;ch++}})});
+ S.neov3=1;S.neov2=1;S.neov4=1;save();return ch}
+function applyNeo2(){}
+function refreshNeo(){const c=applyNeo(true);alert('تم تحديث نطاقات الأطفال: '+c+' عنصر (الزيارات المعتمدة لا تتغير)');render()}
 mergeCat();applyDefR();applyNeo();applyNeo2();
 render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 </script>
 
-</body>
+<div style="text-align:center;font-size:12px;color:#888;padding:8px 0 70px">v1.3.2 · <a href="#" onclick="refreshNeo();return false" style="color:#f47a2e">تحديث نطاقات الأطفال</a></div></body>
  </html>
